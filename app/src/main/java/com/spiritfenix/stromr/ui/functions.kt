@@ -25,16 +25,17 @@ val sampleEpisodes = listOf(
     MediaItem.Song(7,"Song 3","","",123,"YE","DONDA2"),
 )
 @Composable
-fun CardEpisode(episode: MediaItem){
+fun CardEpisode(item: MediaItem,onTap:()->Unit = {}){
     Card (modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)){
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        onClick = onTap){
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp))
         {
             Box(modifier = Modifier.size(48.dp).clip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) {
-                val icon = when (episode) {
+                val icon = when (item) {
                     is MediaItem.Episode -> "🎙"
                     is MediaItem.Song   -> "🎵"
                 }
@@ -42,7 +43,7 @@ fun CardEpisode(episode: MediaItem){
             }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = episode.title,
+                    text = item.title,
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
@@ -50,9 +51,9 @@ fun CardEpisode(episode: MediaItem){
                 )
                 Spacer(modifier = Modifier.width(2.dp))
                 Text(
-                    text = when(episode){
-                        is MediaItem.Episode ->episode.podcastTitle
-                        is MediaItem.Song ->episode.album
+                    text = when(item){
+                        is MediaItem.Episode ->item.podcastTitle
+                        is MediaItem.Song ->item.album
                     },
                     color=MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
@@ -61,9 +62,9 @@ fun CardEpisode(episode: MediaItem){
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = when(episode){
-                        is MediaItem.Episode ->episode.episodeNumber.toString()
-                        is MediaItem.Song ->episode.artist
+                    text = when(item){
+                        is MediaItem.Episode ->item.episodeNumber.toString()
+                        is MediaItem.Song ->item.artist
                     },
                     color=MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
@@ -72,7 +73,7 @@ fun CardEpisode(episode: MediaItem){
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = episode.getDurationFormatted(),
+                    text = item.getDurationFormatted(),
                     style = MaterialTheme.typography.labelSmall,
                     color=MaterialTheme.colorScheme.primary
                 )
@@ -82,14 +83,32 @@ fun CardEpisode(episode: MediaItem){
 }
 
 @Composable
-fun ListEpisodesScreen(modifier: Modifier = Modifier) {
+fun ListMediaScreen(
+    modifier: Modifier = Modifier,
+    filter: (MediaItem)-> Boolean,
+    onItemTap:(Int)->Unit = {}
+) {
+    val filteredItems = sampleEpisodes.filter(filter)
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ){
-        items(sampleEpisodes, key={it.id}) { episode ->
-            CardEpisode(episode)
+        items(filteredItems, key={it.id}) { item ->
+            CardEpisode(item=item,onTap = {onItemTap(item.id)})
         }
+    }
+}
+
+@Composable
+fun PlayerScreen(mediaId: Int) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "Playing item $mediaId",
+            style = MaterialTheme.typography.headlineMedium
+        )
     }
 }
