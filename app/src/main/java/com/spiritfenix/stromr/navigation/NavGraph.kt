@@ -1,8 +1,11 @@
 package com.spiritfenix.stromr.navigation
 
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
@@ -19,17 +22,23 @@ fun NavGraph(navController: NavHostController,modifier: Modifier = Modifier){
     NavHost(
         navController=navController,
         startDestination = Routes.EPISODE_LIST,
-        modifier = modifier,
-        enterTransition = { fadeIn(animationSpec = tween(150)) },
-        exitTransition = { fadeOut(animationSpec = tween(150)) }
+        modifier = modifier
     ){
-        composable(Routes.EPISODE_LIST){
+        composable(
+            Routes.EPISODE_LIST,
+            enterTransition = { slideInHorizontally(animationSpec = tween(200)) },
+            exitTransition = {fadeOut(animationSpec = tween(100))}
+        ){
             ListMediaScreen(
                 filter = { it is MediaItem.Episode },
                 onItemTap= {mediaId->navController.navigate(Routes.player(mediaId))}
             )
         }
-        composable(Routes.SONG_LIST){
+        composable(
+            Routes.SONG_LIST,
+            enterTransition = { slideInHorizontally(animationSpec = tween(200)){it} },
+            exitTransition = {fadeOut(animationSpec = tween(100))}
+        ){
             ListMediaScreen(
                 filter = { it is MediaItem.Song},
                 onItemTap= {mediaId->navController.navigate(Routes.player(mediaId))}
@@ -37,7 +46,9 @@ fun NavGraph(navController: NavHostController,modifier: Modifier = Modifier){
         }
         composable(
             route = Routes.PLAYER,
-            arguments = listOf(navArgument("mediaId") { type = NavType.IntType })
+            arguments = listOf(navArgument("mediaId") { type = NavType.IntType }),
+            enterTransition = { fadeIn(animationSpec = tween(200)) },
+            exitTransition = { fadeOut(animationSpec = tween(200)) }
         ){ backStackEntry ->
             val mediaId = backStackEntry.arguments?.getInt("mediaId")?: return@composable
             PlayerScreen(mediaId=mediaId)

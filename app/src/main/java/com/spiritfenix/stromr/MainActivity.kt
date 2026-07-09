@@ -40,7 +40,7 @@ class MainActivity : ComponentActivity() {
                                 selected = currentRoute == Routes.EPISODE_LIST,
                                 onClick = { navController.navigate(Routes.EPISODE_LIST){
                                     launchSingleTop = true
-                                    popUpTo(navController.graph.startDestinationId)
+                                    popUpTo(Routes.EPISODE_LIST){inclusive = false}
                                     }
                                 },
                                 icon = { Icon(Icons.Default.List, contentDescription = "Episodes") },
@@ -57,7 +57,7 @@ class MainActivity : ComponentActivity() {
                                 selected = currentRoute == Routes.SONG_LIST,
                                 onClick = { navController.navigate(Routes.SONG_LIST){
                                     launchSingleTop = true
-                                    popUpTo(navController.graph.startDestinationId)
+                                    popUpTo(Routes.SONG_LIST){inclusive = false}
                                     }
                                 },
                                 icon = { Icon(Icons.Default.PlayArrow, contentDescription = "Tracks") },
