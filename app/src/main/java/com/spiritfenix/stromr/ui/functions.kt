@@ -7,12 +7,15 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.spiritfenix.stromr.data.MediaItem
 
 val sampleEpisodes = listOf(
@@ -86,9 +89,11 @@ fun CardEpisode(item: MediaItem,onTap:()->Unit = {}){
 fun ListMediaScreen(
     modifier: Modifier = Modifier,
     filter: (MediaItem)-> Boolean,
-    onItemTap:(Int)->Unit = {}
+    onItemTap:(Int)->Unit = {},
+    viewModel: MediaViewModel = viewModel()
 ) {
-    val filteredItems = sampleEpisodes.filter(filter)
+    val allItems by viewModel.items.collectAsState()
+    val filteredItems = allItems.filter(filter)
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
