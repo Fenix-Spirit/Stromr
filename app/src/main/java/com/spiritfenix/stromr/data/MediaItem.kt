@@ -1,4 +1,14 @@
 package com.spiritfenix.stromr.data
+/**
+* can be data class Episode or Song.
+ * @see Episode
+ * @see Song
+ * @param id
+ * @param title
+ * @param audioUrl
+ * @param imageUrl
+ * @param durationSec
+* */
 sealed class MediaItem {
     abstract val id: Int
     abstract val title: String
@@ -6,6 +16,11 @@ sealed class MediaItem {
     abstract val imageUrl: String
     abstract val durationSec:Int
 
+    /**
+     * @param podcastTitle
+     * @param description
+     * @param episodeNumber
+     */
     data class Episode(
         override val id: Int,
         override val title: String,
@@ -16,6 +31,10 @@ sealed class MediaItem {
         val description: String,
         val episodeNumber: Int
     ): MediaItem()
+    /**
+     * @param artist
+     * @param album
+     */
     data class Song(
         override val id: Int,
         override val title: String,
