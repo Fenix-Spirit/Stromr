@@ -27,8 +27,16 @@ val sampleEpisodes = listOf(
     MediaItem.Song(6,"Song 2","","",123,"YE","DONDA2"),
     MediaItem.Song(7,"Song 3","","",123,"YE","DONDA2"),
 )
+
+/**
+ * Creates a card for a media item
+ * @param item the media item to display
+ * @param onTap a function to be called when the card is tapped
+ * @see MediaItem
+ * @see ListMediaScreen
+ */
 @Composable
-fun CardEpisode(item: MediaItem,onTap:()->Unit = {}){
+fun CardMedia(item: MediaItem, onTap:()->Unit = {}){
     Card (modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         onClick = onTap){
@@ -84,7 +92,15 @@ fun CardEpisode(item: MediaItem,onTap:()->Unit = {}){
         }
     }
 }
-
+/**
+ * Displays a LazyColumn with media items
+ * @param modifier the modifier for the list
+ * @param filter a function to filter the items
+ * @param onItemTap a function to be called when an item is tapped, gets passed down to CardMedia
+ * @param viewModel the view model for the list
+ * @see MediaItem
+ * @see CardMedia
+ */
 @Composable
 fun ListMediaScreen(
     modifier: Modifier = Modifier,
@@ -100,7 +116,7 @@ fun ListMediaScreen(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ){
         items(filteredItems, key={it.id}) { item ->
-            CardEpisode(item=item,onTap = {onItemTap(item.id)})
+            CardMedia(item=item,onTap = {onItemTap(item.id)})
         }
     }
 }

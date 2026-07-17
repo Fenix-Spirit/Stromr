@@ -17,6 +17,10 @@ import com.spiritfenix.stromr.data.MediaItem
 import com.spiritfenix.stromr.ui.ListMediaScreen
 import com.spiritfenix.stromr.ui.PlayerScreen
 
+/**
+ * Navigation graph for the app.
+ * @see Routes
+ */
 @Composable
 fun NavGraph(navController: NavHostController,modifier: Modifier = Modifier){
     NavHost(

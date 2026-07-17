@@ -1,5 +1,10 @@
 package com.spiritfenix.stromr.navigation
-
+/**
+ * Options->
+ * @property EPISODE_LIST
+ * @property SONG_LIST
+ * @property PLAYER
+ */
 object Routes {
     const val EPISODE_LIST = "episode_list"
     const val SONG_LIST = "song_list"
