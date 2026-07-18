@@ -122,13 +122,19 @@ fun ListMediaScreen(
 }
 
 @Composable
-fun PlayerScreen(mediaId: Int) {
+fun PlayerScreen(
+    mediaId: Int,
+    playerViewModel: PlayerViewModel = viewModel(),
+    mediaViewModel: MediaViewModel = viewModel()
+) {
+    val media= mediaViewModel.FindById(mediaId) ?: return
+    playerViewModel.play(media)
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "Playing item $mediaId",
+            text = "Playing item ${media.title}",
             style = MaterialTheme.typography.headlineMedium
         )
     }

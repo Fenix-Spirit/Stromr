@@ -20,4 +20,5 @@ class MediaViewModel: ViewModel() {
     private fun loadItems() {
         _items.value = sampleEpisodes
     }
+    fun FindById(id:Int): MediaItem? =items.value.find { it.id == id }
 }
