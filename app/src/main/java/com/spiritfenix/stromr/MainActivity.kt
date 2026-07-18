@@ -13,7 +13,7 @@ import com.spiritfenix.stromr.ui.theme.StrömrTheme
 import androidx.navigation.compose.rememberNavController
 import com.spiritfenix.stromr.navigation.NavGraph
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -43,7 +43,7 @@ class MainActivity : ComponentActivity() {
                                     popUpTo(Routes.EPISODE_LIST){inclusive = false}
                                     }
                                 },
-                                icon = { Icon(Icons.Default.List, contentDescription = "Episodes") },
+                                icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Episodes") },
                                 label = { Text("Episodes") },
                                 colors = NavigationBarItemDefaults.colors(
                                     selectedIconColor = MaterialTheme.colorScheme.primary,
