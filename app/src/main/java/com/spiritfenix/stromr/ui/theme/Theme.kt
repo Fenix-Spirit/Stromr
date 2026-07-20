@@ -5,66 +5,56 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
-
-// Base
-val Black900 = Color(0xFF0A0A0A)
-val Black800 = Color(0xFF141414)
-val Black700 = Color(0xFF2A2A2A)
-val White100 = Color(0xFFF5F5F5)
-val White200 = Color(0xFFE0E0E0)
-
-// Accent — ember orange
-val Ember      = Color(0xFFE8621A)
-val EmberLight = Color(0xFFF4A96A)
-val EmberDim   = Color(0xFF7A3410)
-
-private val DarkColorScheme = darkColorScheme(
-    primary          = Ember,
-    onPrimary        = White100,
-    primaryContainer = EmberDim,
-    onPrimaryContainer = EmberLight,
-
-    background       = Black900,
-    onBackground     = White100,
-
-    surface          = Black800,
-    onSurface        = White100,
-    surfaceVariant   = Black700,
-    onSurfaceVariant = White200,
-
-    secondary        = EmberLight,
-    onSecondary      = Black900,
-
-    outline          = Black700,
-)
-
-private val LightColorScheme = lightColorScheme(
-    primary          = Ember,
-    onPrimary        = White100,
-    primaryContainer = EmberLight,
-    onPrimaryContainer = EmberDim,
-
-    background       = White100,
-    onBackground     = Black900,
-
-    surface          = Color(0xFFFFFFFF),
-    onSurface        = Black900,
-    surfaceVariant   = Color(0xFFF0F0F0),
-    onSurfaceVariant = Color(0xFF555555),
-
-    secondary        = EmberDim,
-    onSecondary      = White100,
-
-    outline          = Color(0xFFD0D0D0),
-)
+import androidx.compose.ui.res.colorResource
+import com.spiritfenix.stromr.R
 
 @Composable
 fun StrömrTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    val colorScheme = if (darkTheme) {
+        darkColorScheme(
+            primary = colorResource(R.color.ember),
+            onPrimary = colorResource(R.color.white_100),
+            primaryContainer = colorResource(R.color.ember_dim),
+            onPrimaryContainer = colorResource(R.color.ember_light),
+
+            background = colorResource(R.color.black_900),
+            onBackground = colorResource(R.color.white_100),
+
+            surface = colorResource(R.color.black_800),
+            onSurface = colorResource(R.color.white_100),
+            surfaceVariant = colorResource(R.color.black_700),
+            onSurfaceVariant = colorResource(R.color.white_200),
+
+            secondary = colorResource(R.color.ember_light),
+            onSecondary = colorResource(R.color.black_900),
+
+            outline = colorResource(R.color.black_700),
+        )
+    } else {
+        lightColorScheme(
+            primary = colorResource(R.color.ember),
+            onPrimary = colorResource(R.color.white_100),
+            primaryContainer = colorResource(R.color.ember_light),
+            onPrimaryContainer = colorResource(R.color.ember_dim),
+
+            background = colorResource(R.color.white_100),
+            onBackground = colorResource(R.color.black_900),
+
+            surface = colorResource(R.color.white),
+            onSurface = colorResource(R.color.black_900),
+            surfaceVariant = colorResource(R.color.grey_f0),
+            onSurfaceVariant = colorResource(R.color.grey_55),
+
+            secondary = colorResource(R.color.ember_dim),
+            onSecondary = colorResource(R.color.white_100),
+
+            outline = colorResource(R.color.grey_d0),
+        )
+    }
+
     MaterialTheme(
         colorScheme = colorScheme,
         content = content
