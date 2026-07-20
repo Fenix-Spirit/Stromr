@@ -13,14 +13,21 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.spiritfenix.stromr.data.MediaItem
 import com.spiritfenix.stromr.ui.ListMediaScreen
+import com.spiritfenix.stromr.ui.MediaViewModel
 import com.spiritfenix.stromr.ui.PlayerScreen
+import com.spiritfenix.stromr.ui.PlayerViewModel
 
 /**
  * Navigation graph for the app.
  * @see Routes
  */
 @Composable
-fun NavGraph(navController: NavHostController,modifier: Modifier = Modifier){
+fun NavGraph(
+    navController: NavHostController,
+    modifier: Modifier = Modifier,
+    playerViewModel: PlayerViewModel,
+    mediaViewModel: MediaViewModel
+){
     NavHost(
         navController=navController,
         startDestination = Routes.EPISODE_LIST,
@@ -33,7 +40,8 @@ fun NavGraph(navController: NavHostController,modifier: Modifier = Modifier){
         ){
             ListMediaScreen(
                 filter = { it is MediaItem.Episode },
-                onItemTap= {mediaId->navController.navigate(Routes.player(mediaId))}
+                onItemTap= {mediaId->navController.navigate(Routes.player(mediaId))},
+                viewModel=mediaViewModel
             )
         }
         composable(
@@ -43,7 +51,8 @@ fun NavGraph(navController: NavHostController,modifier: Modifier = Modifier){
         ){
             ListMediaScreen(
                 filter = { it is MediaItem.Song},
-                onItemTap= {mediaId->navController.navigate(Routes.player(mediaId))}
+                onItemTap= {mediaId->navController.navigate(Routes.player(mediaId))},
+                viewModel=mediaViewModel
             )
         }
         composable(
@@ -53,7 +62,7 @@ fun NavGraph(navController: NavHostController,modifier: Modifier = Modifier){
             exitTransition = { fadeOut(animationSpec = tween(200)) }
         ){ backStackEntry ->
             val mediaId = backStackEntry.arguments?.getInt("mediaId")?: return@composable
-            PlayerScreen(mediaId=mediaId)
+            PlayerScreen(mediaId=mediaId,playerViewModel=playerViewModel,mediaViewModel=mediaViewModel)
         }
     }
 }

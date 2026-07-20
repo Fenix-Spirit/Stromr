@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -15,17 +16,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.spiritfenix.stromr.data.MediaItem
 
 val sampleEpisodes = listOf(
     MediaItem.Episode(1, "Episode 1", "", "", 120,"sla","1d",1),
     MediaItem.Episode(2, "Episode 2", "", "", 135,"sla","2d",2),
-    MediaItem.Episode(3, "Episode 3", "", "", 789,"sla","3d",3),
-    MediaItem.Episode(4, "Episode 4", "", "", 123,"sla","4d",4),
+    MediaItem.Episode(3, "Episode 3", "https://www.myinstants.com/media/sounds/du-bist-gut-genuaasddsssssssg.mp3", "", 789,"sla","3d",3),
+    MediaItem.Episode(4, "Episode 4", "https://www.myinstants.com/media/sounds/du-bist-gut-genug.mdaj", "", 123,"sla","4d",4),
     MediaItem.Song(5,"Song 1","","",184,"YE","DONDA2"),
     MediaItem.Song(6,"Song 2","","",123,"YE","DONDA2"),
-    MediaItem.Song(7,"Song 3","","",123,"YE","DONDA2"),
+    MediaItem.Song(7,"Song 3","https://www.myinstants.com/media/sounds/du-bist-gut-genug.mp3","",123,"YE","DONDA2"),
 )
 
 /**
@@ -106,7 +106,7 @@ fun ListMediaScreen(
     modifier: Modifier = Modifier,
     filter: (MediaItem)-> Boolean,
     onItemTap:(Int)->Unit = {},
-    viewModel: MediaViewModel = viewModel()
+    viewModel: MediaViewModel
 ) {
     val allItems by viewModel.items.collectAsState()
     val filteredItems = allItems.filter(filter)
@@ -124,11 +124,13 @@ fun ListMediaScreen(
 @Composable
 fun PlayerScreen(
     mediaId: Int,
-    playerViewModel: PlayerViewModel = viewModel(),
-    mediaViewModel: MediaViewModel = viewModel()
+    playerViewModel: PlayerViewModel,
+    mediaViewModel: MediaViewModel
 ) {
-    val media= mediaViewModel.FindById(mediaId) ?: return
-    playerViewModel.play(media)
+    val media= mediaViewModel.FindById(mediaId)?:return
+    LaunchedEffect(media) {
+        playerViewModel.play(media)
+    }
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center

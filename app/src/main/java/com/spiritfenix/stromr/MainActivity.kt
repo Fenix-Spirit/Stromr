@@ -19,9 +19,17 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import com.spiritfenix.stromr.navigation.Routes
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.spiritfenix.stromr.ui.MediaViewModel
+import com.spiritfenix.stromr.ui.PlayerViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,8 +40,19 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
+                val mediaViewModel: MediaViewModel = viewModel()
+                val playerViewModel: PlayerViewModel = viewModel()
+                val snackbarHostState = remember { SnackbarHostState() }
+                val errorMessage by playerViewModel.errorMessage.collectAsState()
+                LaunchedEffect(errorMessage) {
+                    errorMessage?.let {
+                        snackbarHostState.showSnackbar(it)
+                        playerViewModel.clearError()
+                    }
+                }
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
+                    snackbarHost = { SnackbarHost(snackbarHostState) },
                     bottomBar = {
                         NavigationBar {
                             NavigationBarItem(
@@ -75,6 +94,8 @@ class MainActivity : ComponentActivity() {
                 ) { innerPadding ->
                     NavGraph(
                         navController = navController,
+                        mediaViewModel=mediaViewModel,
+                        playerViewModel=playerViewModel,
                         modifier = Modifier.padding(innerPadding)
                     )
                 }

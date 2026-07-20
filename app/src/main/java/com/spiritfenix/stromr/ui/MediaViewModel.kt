@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
  */
 class MediaViewModel: ViewModel() {
     private val _items = MutableStateFlow<List<MediaItem>>(emptyList())
-    val items: StateFlow<List<MediaItem>> = _items.asStateFlow()//read only
+    val items: StateFlow<List<MediaItem>> = _items.asStateFlow()//read-only
 
     init {
         loadItems()
