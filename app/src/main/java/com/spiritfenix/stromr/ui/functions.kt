@@ -121,6 +121,16 @@ fun ListMediaScreen(
     }
 }
 
+/**
+ * Displays a player screen with information of the given media item
+ * @param mediaId the id of the media item to play
+ * @param playerViewModel the view model for the player
+ * @param mediaViewModel the view model for the media items
+ * @see MediaItem
+ * @see PlayerViewModel
+ * @see MediaViewModel
+ * @see CardMedia
+ */
 @Composable
 fun PlayerScreen(
     mediaId: Int,
