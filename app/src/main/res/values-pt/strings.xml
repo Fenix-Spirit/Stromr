@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Strömr</string>
     <string name="song">Músicas</string>
     <string name="ep">Episódios</string>
     <string name="network_error">Sem conexão á Internet</string>

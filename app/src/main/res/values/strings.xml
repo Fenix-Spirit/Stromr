@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Strömr</string>
+    <string name="app_name" translatable="false">Strömr</string>
     <string name="song">Tracks</string>
     <string name="ep">Episodes</string>
     <string name="network_error">No internet connection</string>
