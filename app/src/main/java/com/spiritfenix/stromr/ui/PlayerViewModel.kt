@@ -6,10 +6,12 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.MediaItem as Media3Item
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import com.spiritfenix.stromr.R
 import com.spiritfenix.stromr.data.MediaItem
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import com.spiritfenix.stromr.R.string
 
 /**
  * ViewModel for the [ExoPlayer].
@@ -45,16 +47,16 @@ class PlayerViewModel(application: Application): AndroidViewModel(application) {
         return when (error.errorCode) {
             PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
             PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT ->
-                "No internet connection"
+                R.string.network_error.toString()
             PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS ->
-                "Episode/Song unavailable (server error)"
+                R.string.network_error.toString()
             PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND ->
-                "Episode/Song file not found"
+                R.string.io_error.toString()
             PlaybackException.ERROR_CODE_DECODER_INIT_FAILED,
             PlaybackException.ERROR_CODE_DECODING_FAILED ->
-                "Unsupported audio format"
+                R.string.wrong_format_error.toString()
             else ->
-                "Playback error: ${error.errorCodeName}"
+                R.string.default_error.toString()+error.errorCodeName
         }
     }
 }

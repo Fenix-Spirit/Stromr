@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">Strömr</string>
+    <string name="song">Tracks</string>
+    <string name="ep">Episodes</string>
+    <string name="network_error">No internet connection</string>
+    <string name="sever_error">Episode/Track unavailable (server error)</string>
+    <string name="io_error">Episode/Track file not found</string>
+    <string name="wrong_format_error">Unsupported audio format</string>
+    <string name="default_error">"Playback error: "</string>
 </resources>

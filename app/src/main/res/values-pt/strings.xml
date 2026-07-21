@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Strömr</string>
+    <string name="song">Músicas</string>
+    <string name="ep">Episódios</string>
+    <string name="network_error">Sem conexão á Internet</string>
+    <string name="io_error">Ficheiro Episódio/Música não encontrado</string>
+    <string name="wrong_format_error">Formato de aúdio não suportado</string>
+    <string name="default_error">"Erro ao reproduzir: "</string>
+    <string name="sever_error">Episódio/Música indisponível (erro de servidor)</string>
+</resources>

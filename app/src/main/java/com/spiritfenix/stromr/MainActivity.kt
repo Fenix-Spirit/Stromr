@@ -27,6 +27,7 @@ import androidx.compose.runtime.collectAsState
 import com.spiritfenix.stromr.navigation.Routes
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.spiritfenix.stromr.ui.MediaViewModel
 import com.spiritfenix.stromr.ui.PlayerViewModel
@@ -62,8 +63,8 @@ class MainActivity : ComponentActivity() {
                                     popUpTo(Routes.EPISODE_LIST){inclusive = false}
                                     }
                                 },
-                                icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Episodes") },
-                                label = { Text("Episodes") },
+                                icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = stringResource(R.string.ep)) },
+                                label = { Text(stringResource(R.string.ep)) },
                                 colors = NavigationBarItemDefaults.colors(
                                     selectedIconColor = MaterialTheme.colorScheme.primary,
                                     selectedTextColor = MaterialTheme.colorScheme.primary,
@@ -79,8 +80,8 @@ class MainActivity : ComponentActivity() {
                                     popUpTo(Routes.SONG_LIST){inclusive = false}
                                     }
                                 },
-                                icon = { Icon(Icons.Default.PlayArrow, contentDescription = "Tracks") },
-                                label = { Text("Tracks") },
+                                icon = { Icon(Icons.Default.PlayArrow, contentDescription = stringResource(R.string.song)) },
+                                label = { Text(stringResource(R.string.song)) },
                                 colors = NavigationBarItemDefaults.colors(
                                     selectedIconColor = MaterialTheme.colorScheme.primary,
                                     selectedTextColor = MaterialTheme.colorScheme.primary,
