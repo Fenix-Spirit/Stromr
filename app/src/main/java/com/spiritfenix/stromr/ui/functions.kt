@@ -2,6 +2,7 @@ package com.spiritfenix.stromr.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,14 +18,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.spiritfenix.stromr.data.MediaItem
-
+import kotlin.time.Duration.Companion.milliseconds
 val sampleEpisodes = listOf(
-    MediaItem.Episode(1, "Episode 1", "", "", 120,"sla","1d",1),
-    MediaItem.Episode(2, "Episode 2", "", "", 135,"sla","2d",2),
-    MediaItem.Episode(3, "Episode 3", "https://www.myinstants.com/media/sounds/du-bist-gut-genuaasddsssssssg.mp3", "", 789,"sla","3d",3),
-    MediaItem.Episode(4, "Episode 4", "https://www.myinstants.com/media/sounds/du-bist-gut-genug.mdaj", "", 123,"sla","4d",4),
-    MediaItem.Song(5,"Song 1","","",184,"YE","DONDA2"),
-    MediaItem.Song(6,"Song 2","","",123,"YE","DONDA2"),
+    MediaItem.Episode(1, "Episode 1", "https://www.myinstants.com/media/sounds/mbappe-dictador_bAAKC8q.mp3", "", 120,"sla","1d",1),
+    MediaItem.Episode(2, "Episode 2", "https://www.myinstants.com/media/sounds/mbappe-dictador_bAAKC8q.mp3", "", 135,"sla","2d",2),
+    MediaItem.Episode(3, "Episode 3", "https://www.myinstants.com/media/sounds/du-bist-gut-genug.mp3", "", 789,"sla","3d",3),
+    MediaItem.Episode(4, "Episode 4", "https://www.myinstants.com/media/sounds/du-bist-gut-genug.mp3", "", 123,"sla","4d",4),
+    MediaItem.Song(5,"Song 1","https://www.myinstants.com/media/sounds/mbappe-dictador_bAAKC8q.mp3","",184,"YE","DONDA2"),
+    MediaItem.Song(6,"Song 2","https://www.myinstants.com/media/sounds/mbappe-dictador_bAAKC8q.mp3","",123,"YE","DONDA2"),
     MediaItem.Song(7,"Song 3","https://www.myinstants.com/media/sounds/du-bist-gut-genug.mp3","",123,"YE","DONDA2"),
 )
 
@@ -141,13 +142,17 @@ fun PlayerScreen(
     LaunchedEffect(media) {
         playerViewModel.play(media)
     }
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
+    Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.SpaceAround) {
+        Box(modifier = Modifier.size(256.dp).clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) {
+            //image
+        }
         Text(
             text = "Playing item ${media.title}",
             style = MaterialTheme.typography.headlineMedium
+        )
+        Text(
+            text="${playerViewModel.exoPlayer.currentPosition.milliseconds.inWholeSeconds}/${playerViewModel.exoPlayer.duration.milliseconds.inWholeSeconds}s",
+            style=MaterialTheme.typography.bodySmall
         )
     }
 }
