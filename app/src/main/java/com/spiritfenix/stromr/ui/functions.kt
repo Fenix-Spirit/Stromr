@@ -1,5 +1,6 @@
 package com.spiritfenix.stromr.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
@@ -14,9 +15,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.spiritfenix.stromr.R
 import com.spiritfenix.stromr.data.MediaItem
 import kotlin.time.Duration.Companion.milliseconds
 val sampleEpisodes = listOf(
@@ -144,7 +148,11 @@ fun PlayerScreen(
     }
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.SpaceAround) {
         Box(modifier = Modifier.size(256.dp).clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) {
-            //image
+            Image(
+                modifier = Modifier.fillMaxSize(),
+                painter = painterResource(R.drawable.baseline_broken_image_24),
+                contentDescription = stringResource(R.string.default_image_description),
+            )
         }
         Text(
             text = "Playing item ${media.title}",

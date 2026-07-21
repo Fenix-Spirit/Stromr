@@ -7,4 +7,5 @@
     <string name="wrong_format_error">Formato de aúdio não suportado</string>
     <string name="default_error">"Erro ao reproduzir: "</string>
     <string name="sever_error">Episódio/Música indisponível (erro de servidor)</string>
+    <string name="default_image_description">Imagem de capa em falta</string>
 </resources>

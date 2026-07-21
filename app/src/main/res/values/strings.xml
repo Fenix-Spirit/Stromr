@@ -7,4 +7,5 @@
     <string name="io_error">Episode/Track file not found</string>
     <string name="wrong_format_error">Unsupported audio format</string>
     <string name="default_error">"Playback error: "</string>
+    <string name="default_image_description">Missing cover</string>
 </resources>
