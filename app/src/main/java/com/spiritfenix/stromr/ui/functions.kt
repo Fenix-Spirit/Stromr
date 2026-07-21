@@ -22,7 +22,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.spiritfenix.stromr.R
 import com.spiritfenix.stromr.data.MediaItem
+import kotlin.time.Duration.Companion.convert
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.DurationUnit
+import kotlin.time.ExperimentalTime
+
 val sampleEpisodes = listOf(
     MediaItem.Episode(1, "Episode 1", "https://www.myinstants.com/media/sounds/mbappe-dictador_bAAKC8q.mp3", "", 120,"sla","1d",1),
     MediaItem.Episode(2, "Episode 2", "https://www.myinstants.com/media/sounds/mbappe-dictador_bAAKC8q.mp3", "", 135,"sla","2d",2),
@@ -136,6 +140,7 @@ fun ListMediaScreen(
  * @see MediaViewModel
  * @see CardMedia
  */
+@OptIn(ExperimentalTime::class)
 @Composable
 fun PlayerScreen(
     mediaId: Int,
@@ -159,7 +164,7 @@ fun PlayerScreen(
             style = MaterialTheme.typography.headlineMedium
         )
         Text(
-            text="${playerViewModel.exoPlayer.currentPosition.milliseconds.inWholeSeconds}/${playerViewModel.exoPlayer.duration.milliseconds.inWholeSeconds}s",
+            text="${convert(playerViewModel.exoPlayer.currentPosition.toDouble(), DurationUnit.MILLISECONDS,DurationUnit.SECONDS)}/${playerViewModel.exoPlayer.duration.milliseconds.inWholeSeconds}s",
             style=MaterialTheme.typography.bodySmall
         )
     }
