@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.asStateFlow
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
     private var controller: MediaController? = null
     private var controllerFuture: ListenableFuture<MediaController>? = null
+    private var pendingItem: MediaItem? = null
     val player: Player?
         get() = controller
     private val _errorMessage = MutableStateFlow<String?>(null)
@@ -44,11 +45,22 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             {
                 controller = controllerFuture?.get()
                 controller?.addListener(playerListener)
+                pendingItem?.let { item ->
+                    startPlayback(item)
+                    pendingItem = null
+                }
             },
             ContextCompat.getMainExecutor(application)
         )
     }
     fun play(item: MediaItem) {
+        if (controller != null) {
+            startPlayback(item)
+        } else {
+            pendingItem = item
+        }
+    }
+    private fun startPlayback(item: MediaItem) {
         val media3Item = Media3Item.fromUri(item.audioUrl)
         controller?.apply {
             setMediaItem(media3Item)
