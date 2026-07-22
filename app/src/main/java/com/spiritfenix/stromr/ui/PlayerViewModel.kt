@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.ComponentName
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.MediaItem as Media3Item
 import androidx.media3.common.Player
@@ -61,7 +62,16 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
     private fun startPlayback(item: MediaItem) {
-        val media3Item = Media3Item.fromUri(item.audioUrl)
+        val metadata = MediaMetadata.Builder()
+            .setTitle(item.title)
+            .setArtist(
+                when (item) {
+                    is MediaItem.Episode -> item.podcastTitle
+                    is MediaItem.Song -> item.artist
+                }
+            )
+            .build()
+        val media3Item = Media3Item.Builder().setUri(item.audioUrl).setMediaMetadata(metadata).build()
         controller?.apply {
             setMediaItem(media3Item)
             prepare()
