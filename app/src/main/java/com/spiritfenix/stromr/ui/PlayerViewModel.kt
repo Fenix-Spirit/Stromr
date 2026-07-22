@@ -1,43 +1,64 @@
 package com.spiritfenix.stromr.ui
 
 import android.app.Application
+import android.content.ComponentName
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.MediaItem as Media3Item
 import androidx.media3.common.Player
-import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.session.MediaController
+import androidx.media3.session.SessionToken
+import com.google.common.util.concurrent.ListenableFuture
 import com.spiritfenix.stromr.R
 import com.spiritfenix.stromr.data.MediaItem
+import com.spiritfenix.stromr.service.PlaybackService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import com.spiritfenix.stromr.R.string
 
 /**
- * ViewModel for the [ExoPlayer].
- * @see MediaItem
- * @see ExoPlayer
- * @see Media3Item
+ * ViewModel that controls playback via a [MediaController] connected to [PlaybackService].
+ * @see MediaController
+ * @see PlaybackService
  */
-class PlayerViewModel(application: Application): AndroidViewModel(application) {
-    val exoPlayer: ExoPlayer = ExoPlayer.Builder(application).build()
+class PlayerViewModel(application: Application) : AndroidViewModel(application) {
+    private var controller: MediaController? = null
+    private var controllerFuture: ListenableFuture<MediaController>? = null
+    val player: Player?
+        get() = controller
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
-    init {
-        exoPlayer.addListener(object : Player.Listener {
-            override fun onPlayerError(error: PlaybackException) {
-                _errorMessage.value = friendlyMessage(error)
-            }
-        })
+    private val playerListener = object : Player.Listener {
+        override fun onPlayerError(error: PlaybackException) {
+            _errorMessage.value = friendlyMessage(error)
+        }
     }
-    fun play(item: MediaItem){
+    init {
+        val sessionToken = SessionToken(
+            application,
+            ComponentName(application, PlaybackService::class.java)
+        )
+        controllerFuture = MediaController.Builder(application, sessionToken).buildAsync()
+        controllerFuture?.addListener(
+            {
+                controller = controllerFuture?.get()
+                controller?.addListener(playerListener)
+            },
+            ContextCompat.getMainExecutor(application)
+        )
+    }
+    fun play(item: MediaItem) {
         val media3Item = Media3Item.fromUri(item.audioUrl)
-        exoPlayer.setMediaItem(media3Item)
-        exoPlayer.prepare()
-        exoPlayer.play()
+        controller?.apply {
+            setMediaItem(media3Item)
+            prepare()
+            play()
+        }
     }
     override fun onCleared() {
-        exoPlayer.release()
+        controller?.removeListener(playerListener)
+        controllerFuture?.let { MediaController.releaseFuture(it) }
         super.onCleared()
     }
     fun clearError(){

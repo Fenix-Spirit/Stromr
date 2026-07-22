@@ -164,7 +164,7 @@ fun PlayerScreen(
             style = MaterialTheme.typography.headlineMedium
         )
         Text(
-            text="${convert(playerViewModel.exoPlayer.currentPosition.toDouble(), DurationUnit.MILLISECONDS,DurationUnit.SECONDS)}/${playerViewModel.exoPlayer.duration.milliseconds.inWholeSeconds}s",
+            text="${(playerViewModel.player?.currentPosition ?: 0L) / 1000}/${(playerViewModel.player?.duration ?: 0L) / 1000}s",
             style=MaterialTheme.typography.bodySmall
         )
     }
