@@ -181,10 +181,15 @@ fun PlayerScreen(
             text = "Playing item ${media.title}",
             style = MaterialTheme.typography.headlineMedium
         )
-        Text(
-            text="$position/${duration}s",
-            style=MaterialTheme.typography.bodySmall
-        )
+        if (duration > 0) {
+            Text(
+                text="$position/${duration}s",
+                style=MaterialTheme.typography.bodySmall
+            )
+        }
+        else{
+            SkeletonBox(modifier = Modifier.height(14.dp).width(64.dp))
+        }
     }
 }
 
