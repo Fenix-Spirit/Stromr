@@ -54,6 +54,13 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             ContextCompat.getMainExecutor(application)
         )
     }
+
+    /**
+     * Plays the given [MediaItem].
+     * @param item the [MediaItem] to play
+     * @see MediaItem
+     * @see startPlayback
+     */
     fun play(item: MediaItem) {
         if (controller != null) {
             startPlayback(item)
@@ -61,6 +68,12 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             pendingItem = item
         }
     }
+    /**
+     * Starts playback of the given [MediaItem].
+     * @param item the [MediaItem] to play, passed down from the parent (should be [play])
+     * @see MediaItem
+     * @see play
+     */
     private fun startPlayback(item: MediaItem) {
         val metadata = MediaMetadata.Builder()
             .setTitle(item.title)
@@ -86,6 +99,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     fun clearError(){
         _errorMessage.value=null
     }
+
+    /**
+     * Returns a user-friendly error message from a [PlaybackException].
+     */
     private fun friendlyMessage(error: PlaybackException): String {
         return when (error.errorCode) {
             PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,

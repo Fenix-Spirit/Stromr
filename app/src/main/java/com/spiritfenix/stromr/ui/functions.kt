@@ -143,8 +143,8 @@ fun ListMediaScreen(
 /**
  * Displays a player screen with information of the given media item
  * @param mediaId the id of the media item to play
- * @param playerViewModel the view model for the player
- * @param mediaViewModel the view model for the media items
+ * @param playerViewModel the view model for the player (passed down from the parent)
+ * @param mediaViewModel the view model for the media items (passed down from the parent)
  * @see MediaItem
  * @see PlayerViewModel
  * @see MediaViewModel
@@ -193,6 +193,11 @@ fun PlayerScreen(
     }
 }
 
+/**
+ * Displays a skeleton box with a pulsing animation
+ * @param modifier should contain width and height
+ * @param cornerRadius corner radius of the skeleton box, default is 4dp
+ */
 @Composable
 fun SkeletonBox(modifier: Modifier = Modifier,cornerRadius: Dp = 4.dp) {
     val transition = rememberInfiniteTransition(label = "skeleton_pulse")
