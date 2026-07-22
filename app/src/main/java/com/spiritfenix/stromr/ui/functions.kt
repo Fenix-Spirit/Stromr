@@ -12,6 +12,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,12 +23,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.media3.common.C
 import com.spiritfenix.stromr.R
 import com.spiritfenix.stromr.data.MediaItem
-import kotlin.time.Duration.Companion.convert
+import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
 
 val sampleEpisodes = listOf(
     MediaItem.Episode(1, "Episode 1", "https://www.myinstants.com/media/sounds/mbappe-dictador_bAAKC8q.mp3", "", 120,"sla","1d",1),
@@ -140,7 +142,6 @@ fun ListMediaScreen(
  * @see MediaViewModel
  * @see CardMedia
  */
-@OptIn(ExperimentalTime::class)
 @Composable
 fun PlayerScreen(
     mediaId: Int,
@@ -150,6 +151,15 @@ fun PlayerScreen(
     val media= mediaViewModel.FindById(mediaId)?:return
     LaunchedEffect(media) {
         playerViewModel.play(media)
+    }
+    var position by remember { mutableLongStateOf(0L) }
+    var duration by remember { mutableLongStateOf(0L) }
+    LaunchedEffect(playerViewModel.player) {
+        while (true) {
+            position = (playerViewModel.player?.currentPosition.takeIf { it != C.TIME_UNSET } ?: 0L )/ 1000
+            duration = (playerViewModel.player?.duration.takeIf { it!= C.TIME_UNSET } ?: 0L)/ 1000
+            delay(500.milliseconds)
+        }
     }
     Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.SpaceAround) {
         Box(modifier = Modifier.size(256.dp).clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) {
@@ -164,7 +174,7 @@ fun PlayerScreen(
             style = MaterialTheme.typography.headlineMedium
         )
         Text(
-            text="${(playerViewModel.player?.currentPosition ?: 0L) / 1000}/${(playerViewModel.player?.duration ?: 0L) / 1000}s",
+            text="$position/${duration}s",
             style=MaterialTheme.typography.bodySmall
         )
     }
