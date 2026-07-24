@@ -50,4 +50,5 @@ dependencies {
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.retrofit.core)
     implementation(libs.okhttp.core)
+    testImplementation(libs.kxml2)
 }
