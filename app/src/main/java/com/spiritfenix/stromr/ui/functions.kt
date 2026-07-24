@@ -24,16 +24,6 @@ import com.spiritfenix.stromr.data.MediaItem
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
 
-val sampleEpisodes = listOf(
-    MediaItem.Episode(1, "Episode 1", "https://www.myinstants.com/media/sounds/mbappe-dictador_bAAKC8q.mp3", "", 120,"sla","1d",1),
-    MediaItem.Episode(2, "Episode 2", "https://www.myinstants.com/media/sounds/mbappe-dictador_bAAKC8q.mp3", "", 135,"sla","2d",2),
-    MediaItem.Episode(3, "Episode 3", "https://www.myinstants.com/media/sounds/du-bist-gut-genug.mp3", "", 789,"sla","3d",3),
-    MediaItem.Episode(4, "Episode 4", "https://www.myinstants.com/media/sounds/du-bist-gut-genug.mp3", "", 123,"sla","4d",4),
-    MediaItem.Song(5,"Song 1","https://www.myinstants.com/media/sounds/mbappe-dictador_bAAKC8q.mp3","",184,"YE","DONDA2"),
-    MediaItem.Song(6,"Song 2","https://www.myinstants.com/media/sounds/mbappe-dictador_bAAKC8q.mp3","",123,"YE","DONDA2"),
-    MediaItem.Song(7,"Song 3","https://www.myinstants.com/media/sounds/du-bist-gut-genug.mp3","",123,"YE","DONDA2"),
-)
-
 /**
  * Creates a card for a media item
  * @param item the media item to display
@@ -114,15 +104,23 @@ fun ListMediaScreen(
     onItemTap:(Int)->Unit = {},
     viewModel: MediaViewModel
 ) {
-    val allItems by viewModel.items.collectAsState()
-    val filteredItems = allItems.filter(filter)
-    LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ){
-        items(filteredItems, key={it.id}) { item ->
-            CardMedia(item=item,onTap = {onItemTap(item.id)})
+    val state by viewModel.uiState.collectAsState()
+    when (state) {
+        is UiState.Loading -> {
+        }
+        is UiState.Error -> {
+        }
+        is UiState.Success -> {
+            val filteredItems = (state as UiState.Success).items.filter(filter)
+            LazyColumn(
+                modifier = modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ){
+                items(filteredItems, key={it.id}) { item ->
+                    CardMedia(item=item,onTap = {onItemTap(item.id)})
+                }
+            }
         }
     }
 }

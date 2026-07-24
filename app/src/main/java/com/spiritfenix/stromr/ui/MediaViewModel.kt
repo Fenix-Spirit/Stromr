@@ -2,6 +2,7 @@ package com.spiritfenix.stromr.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.spiritfenix.stromr.R
 import com.spiritfenix.stromr.data.MediaItem
 import com.spiritfenix.stromr.data.RssParser
 import com.spiritfenix.stromr.network.rssApiClient
@@ -31,9 +32,9 @@ class MediaViewModel: ViewModel() {
                 val episodes = RssParser.parse(xml)
                 _uiState.value = UiState.Success(episodes)
             } catch (e: IOException) {
-                _uiState.value = UiState.Error("Couldn't reach the feed — check your connection")
+                _uiState.value = UiState.Error(R.string.fetch_error.toString())
             } catch (e: Exception) {
-                _uiState.value = UiState.Error("Something went wrong loading the feed")
+                _uiState.value = UiState.Error(R.string.default_fetch_error.toString())
             }
         }
     }

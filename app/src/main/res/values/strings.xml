@@ -8,4 +8,6 @@
     <string name="wrong_format_error">Unsupported audio format</string>
     <string name="default_error">"Playback error: "</string>
     <string name="default_image_description">Missing cover</string>
+    <string name="fetch_error">Couldn\'t reach the feed, check your connection</string>
+    <string name="default_fetch_error">Something went wrong loading the feed</string>
 </resources>
