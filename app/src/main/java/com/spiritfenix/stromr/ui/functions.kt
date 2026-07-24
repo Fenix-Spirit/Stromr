@@ -107,6 +107,11 @@ fun ListMediaScreen(
     val state by viewModel.uiState.collectAsState()
     when (state) {
         is UiState.Loading -> {
+            LazyColumn (modifier = modifier.fillMaxSize(),contentPadding = PaddingValues(16.dp),verticalArrangement = Arrangement.spacedBy(8.dp)){
+                items (7){
+                    SkeletonBox(modifier = Modifier.height(100.dp).fillMaxWidth(),cornerRadius = 8.dp)
+                }
+            }
         }
         is UiState.Error -> {
         }
