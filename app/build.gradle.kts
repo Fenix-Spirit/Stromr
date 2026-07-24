@@ -48,4 +48,6 @@ dependencies {
     implementation(libs.androidx.material.icons)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.retrofit.core)
+    implementation(libs.okhttp.core)
 }
