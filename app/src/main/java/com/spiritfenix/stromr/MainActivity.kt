@@ -23,6 +23,7 @@ import com.spiritfenix.stromr.navigation.NavGraph
 import com.spiritfenix.stromr.navigation.Routes
 import com.spiritfenix.stromr.ui.MediaViewModel
 import com.spiritfenix.stromr.ui.PlayerViewModel
+import com.spiritfenix.stromr.ui.UiState
 import com.spiritfenix.stromr.ui.theme.StrömrTheme
 
 class MainActivity : ComponentActivity() {
@@ -37,7 +38,10 @@ class MainActivity : ComponentActivity() {
                 val mediaViewModel: MediaViewModel = viewModel()
                 val playerViewModel: PlayerViewModel = viewModel()
                 val snackbarHostState = remember { SnackbarHostState() }
-                val errorMessage by playerViewModel.errorMessage.collectAsState()
+                val errorMessagePlay by playerViewModel.errorMessage.collectAsState()
+                val messageLoad by mediaViewModel.uiState.collectAsState()
+                val errorMessageLoad = (messageLoad as? UiState.Error)?.message
+                val errorMessage = errorMessagePlay ?: errorMessageLoad
                 LaunchedEffect(errorMessage) {
                     errorMessage?.let {
                         snackbarHostState.showSnackbar(it)

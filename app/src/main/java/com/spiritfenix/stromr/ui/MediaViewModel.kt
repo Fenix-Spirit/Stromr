@@ -1,6 +1,7 @@
 package com.spiritfenix.stromr.ui
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.spiritfenix.stromr.R
 import com.spiritfenix.stromr.data.MediaItem
@@ -16,7 +17,7 @@ private const val TEST_FEED_URL = "https://changelog.com/podcast/feed"
 /**
  * ViewModel for MediaItems. Contains a list of MediaItems.
  */
-class MediaViewModel: ViewModel() {
+class MediaViewModel(application: Application): AndroidViewModel(application) {
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()//read-only
 
@@ -27,14 +28,15 @@ class MediaViewModel: ViewModel() {
     private fun loadFeed() {
         _uiState.value = UiState.Loading
         viewModelScope.launch {
+            val context = getApplication<Application>()
             try {
                 val xml = rssApiClient.api.fetchFeed(TEST_FEED_URL).string()
                 val episodes = RssParser.parse(xml)
                 _uiState.value = UiState.Success(episodes)
             } catch (e: IOException) {
-                _uiState.value = UiState.Error(R.string.fetch_error.toString())
+                _uiState.value = UiState.Error(context.getString(R.string.fetch_error))
             } catch (e: Exception) {
-                _uiState.value = UiState.Error(R.string.default_fetch_error.toString())
+                _uiState.value = UiState.Error(context.getString(R.string.default_fetch_error))
             }
         }
     }

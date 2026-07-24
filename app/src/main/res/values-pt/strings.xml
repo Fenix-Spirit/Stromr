@@ -6,7 +6,7 @@
     <string name="io_error">Ficheiro Episódio/Música não encontrado</string>
     <string name="wrong_format_error">Formato de aúdio não suportado</string>
     <string name="default_error">"Erro ao reproduzir: "</string>
-    <string name="sever_error">Episódio/Música indisponível (erro de servidor)</string>
+    <string name="server_error">Episódio/Música indisponível (erro de servidor)</string>
     <string name="default_image_description">Imagem de capa em falta</string>
     <string name="fetch_error">Não foi possível alcançar o conteúdo, verifique a sua ligação</string>
     <string name="default_fetch_error">Algo correu mal ao carregar o conteúdo</string>

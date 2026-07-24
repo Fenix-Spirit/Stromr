@@ -104,19 +104,20 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
      * Returns a user-friendly error message from a [PlaybackException].
      */
     private fun friendlyMessage(error: PlaybackException): String {
+        val context = getApplication<Application>()
         return when (error.errorCode) {
             PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
             PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT ->
-                R.string.network_error.toString()
+                context.getString(R.string.network_error)
             PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS ->
-                R.string.network_error.toString()
+                context.getString(R.string.server_error)
             PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND ->
-                R.string.io_error.toString()
+                context.getString(R.string.io_error)
             PlaybackException.ERROR_CODE_DECODER_INIT_FAILED,
             PlaybackException.ERROR_CODE_DECODING_FAILED ->
-                R.string.wrong_format_error.toString()
+                context.getString(R.string.wrong_format_error)
             else ->
-                R.string.default_error.toString()+error.errorCodeName
+                context.getString(R.string.default_error)+error.errorCodeName
         }
     }
 }
