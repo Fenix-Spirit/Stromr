@@ -55,4 +55,10 @@ class RssParserTest {
         val episodes = RssParser.parse(sampleFeed)
         assertEquals(1245, episodes[1].durationSec)
     }
+    @Test
+    fun `parses episode description`() {
+        val episodes = RssParser.parse(sampleFeed)
+        assertEquals("First episode description", episodes[0].description)
+        assertEquals("Second episode description", episodes[1].description)
+    }
 }
