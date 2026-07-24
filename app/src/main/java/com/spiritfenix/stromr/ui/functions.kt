@@ -156,7 +156,7 @@ fun PlayerScreen(
     playerViewModel: PlayerViewModel,
     mediaViewModel: MediaViewModel
 ) {
-    val media= mediaViewModel.FindById(mediaId)?:return
+    val media= mediaViewModel.findById(mediaId)?:return
     LaunchedEffect(media) {
         playerViewModel.play(media)
     }
