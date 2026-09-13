@@ -40,7 +40,9 @@ class MediaViewModel(application: Application): AndroidViewModel(application) {
             }
         }
     }
-
+    fun retryFeed() {
+        loadFeed()
+    }
     fun findById(id: Int): MediaItem? {
         val state = _uiState.value
         return if (state is UiState.Success) state.items.find { it.id == id } else null
