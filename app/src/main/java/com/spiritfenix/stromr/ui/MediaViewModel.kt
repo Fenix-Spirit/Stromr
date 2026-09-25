@@ -5,7 +5,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.spiritfenix.stromr.R
 import com.spiritfenix.stromr.data.MediaItem
+import com.spiritfenix.stromr.data.PodcastRepository
 import com.spiritfenix.stromr.data.RssParser
+import com.spiritfenix.stromr.data.local.AppDatabase
 import com.spiritfenix.stromr.network.rssApiClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,35 +15,41 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.IOException
 
-private const val TEST_FEED_URL = "https://changelog.com/podcast/feed"
 /**
  * ViewModel for MediaItems. Contains a list of MediaItems.
  */
 class MediaViewModel(application: Application): AndroidViewModel(application) {
+    private val repository = PodcastRepository(AppDatabase.getInstance(application))
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()//read-only
 
-    init {
-        loadFeed()
-    }
+    private var hasAttemptedRefresh = false
 
-    private fun loadFeed() {
-        _uiState.value = UiState.Loading
+    init {
         viewModelScope.launch {
-            val context = getApplication<Application>()
-            try {
-                val xml = rssApiClient.api.fetchFeed(TEST_FEED_URL).string()
-                val episodes = RssParser.parse(xml)
-                _uiState.value = UiState.Success(episodes)
-            } catch (e: IOException) {
-                _uiState.value = UiState.Error(context.getString(R.string.fetch_error))
-            } catch (e: Exception) {
-                _uiState.value = UiState.Error(context.getString(R.string.default_fetch_error))
+            repository.episodes.collect { episodes ->
+                if (episodes.isNotEmpty() || hasAttemptedRefresh) {
+                    _uiState.value = UiState.Success(episodes)
+                }
             }
         }
+        refresh()
     }
-    fun retryFeed() {
-        loadFeed()
+
+    fun refresh() {
+        viewModelScope.launch {
+            try {
+                repository.refresh()
+            } catch (e: IOException) {
+                hasAttemptedRefresh = true
+                _uiState.value = UiState.Error(getApplication<Application>().getString(R.string.fetch_error))
+            } catch (e: Exception) {
+                hasAttemptedRefresh = true
+                _uiState.value = UiState.Error(getApplication<Application>().getString(R.string.default_fetch_error))
+            } finally {
+                hasAttemptedRefresh = true
+            }
+        }
     }
     fun findById(id: Int): MediaItem? {
         val state = _uiState.value

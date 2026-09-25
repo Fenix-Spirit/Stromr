@@ -125,7 +125,7 @@ fun ListMediaScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                Button(onClick = { viewModel.retryFeed() }) {
+                Button(onClick = { viewModel.refresh() }) {
                     Text("Retry")
                 }
             }
