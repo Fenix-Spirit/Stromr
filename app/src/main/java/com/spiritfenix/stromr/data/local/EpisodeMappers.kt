@@ -1,6 +1,5 @@
 package com.spiritfenix.stromr.data.local
 
-import android.R.attr.description
 import com.spiritfenix.stromr.data.MediaItem
 
 fun EpisodeEntity.toDomain(): MediaItem.Episode = MediaItem.Episode(

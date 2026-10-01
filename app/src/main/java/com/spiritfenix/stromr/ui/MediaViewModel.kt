@@ -6,9 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.spiritfenix.stromr.R
 import com.spiritfenix.stromr.data.MediaItem
 import com.spiritfenix.stromr.data.PodcastRepository
-import com.spiritfenix.stromr.data.RssParser
 import com.spiritfenix.stromr.data.local.AppDatabase
-import com.spiritfenix.stromr.network.rssApiClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
