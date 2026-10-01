@@ -1,0 +1,19 @@
+name: release.yml
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Build and publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ./gradlew assembleRelease
+          gh release create ${{ inputs.version }} app/build/outputs/apk/release/app-release-unsigned.apk
