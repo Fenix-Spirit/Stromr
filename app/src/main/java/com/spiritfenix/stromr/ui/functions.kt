@@ -191,6 +191,7 @@ fun PlayerScreen(
                 text="$position/${duration}s",
                 style=MaterialTheme.typography.bodySmall
             )
+			Slider(value = position.toFloat(), valueRange = 0f..duration.toFloat(), onValueChange = { playerViewModel.player?.seekTo(it.toLong()*1000) })
         }
         else{
             SkeletonBox(modifier = Modifier.height(14.dp).width(64.dp))
