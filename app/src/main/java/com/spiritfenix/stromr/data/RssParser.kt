@@ -20,7 +20,7 @@ object RssParser {
         var currentDurationSec = 0
         var currentDescription = ""
         var insideItem = false
-        var episodeCounter = 0
+		var currentEpisodeNumber = 0
 
         var eventType = parser.eventType
         while (eventType != XmlPullParser.END_DOCUMENT) {
@@ -35,6 +35,7 @@ object RssParser {
                             currentDurationSec = 0
                             currentDescription = ""
 							currentGuid = ""
+							currentEpisodeNumber = 0
                         }
                         "title" -> {
                             val text = if (parser.next() == XmlPullParser.TEXT) parser.text else ""
@@ -55,12 +56,15 @@ object RssParser {
 							val text = if (parser.next() == XmlPullParser.TEXT) parser.text else ""
 							if (insideItem) currentGuid = text
 						}
+						"episode" -> {
+							val text = if (parser.next() == XmlPullParser.TEXT) parser.text else ""
+							if (insideItem) currentEpisodeNumber = text.toInt()
+						}
                     }
                 }
                 XmlPullParser.END_TAG -> {
                     if (parser.name == "item") {
                         insideItem = false
-                        episodeCounter++
                         episodes.add(
                             MediaItem.Episode(
 								id = currentGuid,
@@ -71,7 +75,7 @@ object RssParser {
 								durationSec = currentDurationSec,
 								podcastTitle = podcastTitle,
 								description = currentDescription,
-								episodeNumber = episodeCounter,
+								episodeNumber = currentEpisodeNumber,
 							)
                         )
                     }
@@ -79,7 +83,15 @@ object RssParser {
             }
             eventType = parser.next()
         }
-        return episodes
+		val total=episodes.size
+        return episodes.mapIndexed { index, episode ->
+			if(episode.episodeNumber!=0){
+				episode
+			}
+			else{
+				episode.copy(episodeNumber = total-index)
+			}
+		}
     }
 
     private fun parseDurationToSeconds(raw: String): Int {
