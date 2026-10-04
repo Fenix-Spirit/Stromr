@@ -10,7 +10,7 @@ package com.spiritfenix.stromr.data
  * @param durationSec
 * */
 sealed class MediaItem {
-    abstract val id: Int
+    abstract val id: String
     abstract val title: String
     abstract val audioUrl: String
     abstract val imageUrl: String
@@ -22,11 +22,12 @@ sealed class MediaItem {
      * @param episodeNumber
      */
     data class Episode(
-        override val id: Int,
+        override val id: String,
         override val title: String,
         override val audioUrl: String,
         override val imageUrl: String,
         override val durationSec:Int,
+		val feedUrl: String,
         val podcastTitle: String,
         val description: String,
         val episodeNumber: Int
@@ -36,7 +37,7 @@ sealed class MediaItem {
      * @param album
      */
     data class Song(
-        override val id: Int,
+        override val id: String,
         override val title: String,
         override val audioUrl: String,
         override val imageUrl: String,

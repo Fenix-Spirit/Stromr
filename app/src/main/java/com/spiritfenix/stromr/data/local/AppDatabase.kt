@@ -5,7 +5,10 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [EpisodeEntity::class], version = 1, exportSchema = false)
+@Database(
+	entities = [EpisodeEntity::class],
+	version = 2,
+	exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun episodeDao(): EpisodeDao
@@ -17,10 +20,10 @@ abstract class AppDatabase : RoomDatabase() {
         fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 INSTANCE ?: Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    "stromr.db"
-                ).build().also { INSTANCE = it }
+					context.applicationContext,
+					AppDatabase::class.java,
+					"stromr.db"
+				).fallbackToDestructiveMigration(true).build().also { INSTANCE = it }
             }
         }
     }
