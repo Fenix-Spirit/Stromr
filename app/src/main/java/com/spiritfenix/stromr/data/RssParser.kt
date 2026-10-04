@@ -5,7 +5,7 @@ import org.xmlpull.v1.XmlPullParserFactory
 import java.io.StringReader
 
 object RssParser {
-    fun parse(xml:String): List<MediaItem.Episode>{
+    fun parse(xml:String, feedUrl:String): List<MediaItem.Episode>{
         val factory = XmlPullParserFactory.newInstance()
         factory.isNamespaceAware = true
         val parser = factory.newPullParser()
@@ -14,6 +14,7 @@ object RssParser {
         val episodes = mutableListOf<MediaItem.Episode>()
         var podcastTitle = ""
 
+		var currentGuid = ""
         var currentTitle = ""
         var currentAudioUrl = ""
         var currentDurationSec = 0
@@ -33,6 +34,7 @@ object RssParser {
                             currentAudioUrl = ""
                             currentDurationSec = 0
                             currentDescription = ""
+							currentGuid = ""
                         }
                         "title" -> {
                             val text = if (parser.next() == XmlPullParser.TEXT) parser.text else ""
@@ -49,6 +51,10 @@ object RssParser {
                             val text = if (parser.next() == XmlPullParser.TEXT) parser.text else ""
                             if (insideItem) currentDescription = text
                         }
+						"guid" -> {
+							val text = if (parser.next() == XmlPullParser.TEXT) parser.text else ""
+							if (insideItem) currentGuid = text
+						}
                     }
                 }
                 XmlPullParser.END_TAG -> {
@@ -57,15 +63,16 @@ object RssParser {
                         episodeCounter++
                         episodes.add(
                             MediaItem.Episode(
-                                id = episodeCounter,
-                                title = currentTitle,
-                                audioUrl = currentAudioUrl,
-                                imageUrl = "",
-                                durationSec = currentDurationSec,
-                                podcastTitle = podcastTitle,
-                                description = currentDescription,
-                                episodeNumber = episodeCounter
-                            )
+								id = currentGuid,
+								feedUrl = feedUrl,
+								title = currentTitle,
+								audioUrl = currentAudioUrl,
+								imageUrl = "",
+								durationSec = currentDurationSec,
+								podcastTitle = podcastTitle,
+								description = currentDescription,
+								episodeNumber = episodeCounter,
+							)
                         )
                     }
                 }

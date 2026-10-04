@@ -57,11 +57,11 @@ fun NavGraph(
         }
         composable(
             route = Routes.PLAYER,
-            arguments = listOf(navArgument("mediaId") { type = NavType.IntType }),
+            arguments = listOf(navArgument("mediaId") { type = NavType.StringType }),
             enterTransition = { fadeIn(animationSpec = tween(200)) },
             exitTransition = { fadeOut(animationSpec = tween(200)) }
         ){ backStackEntry ->
-            val mediaId = backStackEntry.arguments?.getInt("mediaId")?: return@composable
+            val mediaId = backStackEntry.arguments?.getString("mediaId")?: return@composable
             PlayerScreen(mediaId=mediaId,playerViewModel=playerViewModel,mediaViewModel=mediaViewModel)
         }
     }

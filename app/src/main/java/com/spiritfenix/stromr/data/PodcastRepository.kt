@@ -14,7 +14,7 @@ class PodcastRepository(private val database: AppDatabase) {
 
     suspend fun refresh(){
         val xml = rssApiClient.api.fetchFeed(TEST_FEED_URL).string()
-        val episodes = RssParser.parse(xml)
+        val episodes = RssParser.parse(xml,TEST_FEED_URL)
         database.episodeDao().insertAll(episodes.map { it.toEntity() })
     }
 }

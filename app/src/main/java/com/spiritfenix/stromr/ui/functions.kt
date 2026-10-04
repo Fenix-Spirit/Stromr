@@ -101,7 +101,7 @@ fun CardMedia(item: MediaItem, onTap:()->Unit = {}){
 fun ListMediaScreen(
 	modifier: Modifier = Modifier,
 	filter: (MediaItem)-> Boolean,
-	onItemTap:(Int)->Unit = {},
+	onItemTap:(String)->Unit = {},
 	viewModel: MediaViewModel
 ) {
 	val state by viewModel.uiState.collectAsState()
@@ -157,7 +157,7 @@ fun ListMediaScreen(
  */
 @Composable
 fun PlayerScreen(
-	mediaId: Int,
+	mediaId: String,
 	playerViewModel: PlayerViewModel,
 	mediaViewModel: MediaViewModel
 ) {
