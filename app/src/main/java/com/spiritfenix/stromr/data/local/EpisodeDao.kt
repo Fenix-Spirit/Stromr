@@ -17,4 +17,7 @@ interface EpisodeDao {
 
     @Query("DELETE FROM episodes")
     suspend fun clearAll()
+
+	@Query("DELETE FROM episodes WHERE feedUrl = :feedUrl")
+	suspend fun deleteByFeed(feedUrl: String)
 }

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.spiritfenix.stromr.R
 import com.spiritfenix.stromr.data.MediaItem
 import com.spiritfenix.stromr.data.PodcastRepository
+import com.spiritfenix.stromr.data.SubscriptionStore
 import com.spiritfenix.stromr.data.local.AppDatabase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +18,7 @@ import java.io.IOException
  * ViewModel for MediaItems. Contains a list of MediaItems.
  */
 class MediaViewModel(application: Application): AndroidViewModel(application) {
-    private val repository = PodcastRepository(AppDatabase.getInstance(application))
+    private val repository = PodcastRepository(AppDatabase.getInstance(application), SubscriptionStore(application))
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()//read-only
 
@@ -39,12 +40,14 @@ class MediaViewModel(application: Application): AndroidViewModel(application) {
             try {
                 repository.refresh()
             } catch (e: IOException) {
-                hasAttemptedRefresh = true
-                _uiState.value = UiState.Error(getApplication<Application>().getString(R.string.fetch_error))
-            } catch (e: Exception) {
-                hasAttemptedRefresh = true
-                _uiState.value = UiState.Error(getApplication<Application>().getString(R.string.default_fetch_error))
-            } finally {
+				if (_uiState.value !is UiState.Success) {
+		            _uiState.value = UiState.Error(getApplication<Application>().getString(R.string.fetch_error))
+				}
+			} catch (e: Exception) {
+				if (_uiState.value !is UiState.Success) {
+		            _uiState.value = UiState.Error(getApplication<Application>().getString(R.string.default_fetch_error))
+				}
+			} finally {
                 hasAttemptedRefresh = true
             }
         }
