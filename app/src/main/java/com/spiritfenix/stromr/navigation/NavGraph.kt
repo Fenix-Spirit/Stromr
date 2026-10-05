@@ -12,11 +12,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.spiritfenix.stromr.data.MediaItem
-import com.spiritfenix.stromr.ui.ListMediaScreen
-import com.spiritfenix.stromr.ui.MediaViewModel
-import com.spiritfenix.stromr.ui.PlayerScreen
-import com.spiritfenix.stromr.ui.PlayerViewModel
-import com.spiritfenix.stromr.ui.SubscriptionsScreen
+import com.spiritfenix.stromr.ui.*
 
 /**
  * Navigation graph for the app.

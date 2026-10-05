@@ -1,7 +1,6 @@
 package com.spiritfenix.stromr.data.local
 
 import androidx.room.Entity
-import androidx.room.PrimaryKey
 
 @Entity(
 	tableName = "episodes",
