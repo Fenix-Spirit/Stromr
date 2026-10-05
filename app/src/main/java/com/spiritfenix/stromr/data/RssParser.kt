@@ -67,7 +67,7 @@ object RssParser {
                         insideItem = false
                         episodes.add(
                             MediaItem.Episode(
-								id = currentGuid,
+								id = "$feedUrl|${currentGuid.ifEmpty { currentAudioUrl }}",
 								feedUrl = feedUrl,
 								title = currentTitle,
 								audioUrl = currentAudioUrl,

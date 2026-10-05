@@ -3,7 +3,7 @@ package com.spiritfenix.stromr.data.local
 import com.spiritfenix.stromr.data.MediaItem
 
 fun EpisodeEntity.toDomain(): MediaItem.Episode = MediaItem.Episode(
-	id = guid,
+	id = "$feedUrl|$guid",
 	feedUrl = feedUrl,
 	title = title,
 	audioUrl = audioUrl,
@@ -15,7 +15,7 @@ fun EpisodeEntity.toDomain(): MediaItem.Episode = MediaItem.Episode(
 )
 
 fun MediaItem.Episode.toEntity(): EpisodeEntity = EpisodeEntity(
-	guid = id,
+	guid = id.split("|").last(),
 	feedUrl = feedUrl,
 	title = title,
 	audioUrl = audioUrl,
