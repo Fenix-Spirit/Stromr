@@ -10,4 +10,9 @@
     <string name="default_image_description">Missing cover</string>
     <string name="fetch_error">Couldn\'t reach the feed, check your connection</string>
     <string name="default_fetch_error">Something went wrong loading the feed</string>
+    <string name="subscribe_error">Couldn\'t subscribe, check the URL and your connection</string>
+    <string name="subscriptions">Feeds</string>
+    <string name="feed_url">Feed URL</string>
+    <string name="subscribe">Subscribe</string>
+    <string name="unsubscribe">Unsubscribe</string>
 </resources>

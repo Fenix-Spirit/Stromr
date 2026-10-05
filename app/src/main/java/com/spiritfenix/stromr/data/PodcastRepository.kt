@@ -15,6 +15,7 @@ class PodcastRepository(
 ) {
 	private val dao = database.episodeDao()
 	val episodes: Flow<List<MediaItem.Episode>> = dao.getAllEpisodes().map { entities -> entities.map { it.toDomain() } }
+	val subscribedFeeds: Flow<Set<String>> = subscriptions.feedUrls
 
 	suspend fun refresh() {
 		val urls = subscriptions.feedUrls.first()
@@ -39,8 +40,12 @@ class PodcastRepository(
 		dao.insertAll(parsed.map { it.toEntity() })
 	}
 	suspend fun subscribe(feedUrl: String) {
+		require(feedUrl.startsWith("http://") || feedUrl.startsWith("https://"))
+		val xml = rssApiClient.api.fetchFeed(feedUrl).string()
+		val parsed = RssParser.parse(xml, feedUrl)
+		require(parsed.isNotEmpty())
 		subscriptions.subscribe(feedUrl)
-		refreshFeed(feedUrl)
+		dao.insertAll(parsed.map { it.toEntity() })
 	}
 	suspend fun unsubscribe(feedUrl: String) {
 		dao.deleteByFeed(feedUrl)

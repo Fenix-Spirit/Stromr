@@ -9,10 +9,13 @@ import com.spiritfenix.stromr.data.PodcastRepository
 import com.spiritfenix.stromr.data.SubscriptionStore
 import com.spiritfenix.stromr.data.local.AppDatabase
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.io.IOException
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * ViewModel for MediaItems. Contains a list of MediaItems.
@@ -21,8 +24,10 @@ class MediaViewModel(application: Application): AndroidViewModel(application) {
     private val repository = PodcastRepository(AppDatabase.getInstance(application), SubscriptionStore(application))
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()//read-only
-
+	val subscribedFeeds: StateFlow<Set<String>> = repository.subscribedFeeds.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
     private var hasAttemptedRefresh = false
+	private val _subscribeError = MutableStateFlow<String?>(null)
+	val subscribeError: StateFlow<String?> = _subscribeError.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -35,6 +40,9 @@ class MediaViewModel(application: Application): AndroidViewModel(application) {
         refresh()
     }
 
+	fun clearSubscribeError() {
+		_subscribeError.value = null
+	}
     fun refresh() {
         viewModelScope.launch {
             try {
@@ -52,6 +60,22 @@ class MediaViewModel(application: Application): AndroidViewModel(application) {
             }
         }
     }
+	fun subscribe(url: String, onSuccess: () -> Unit = {}) {
+		viewModelScope.launch {
+			try {
+				repository.subscribe(url.trim())
+				onSuccess()
+			} catch (e: CancellationException) {
+				throw e
+			} catch (e: Exception) {
+				_subscribeError.value = getApplication<Application>().getString(R.string.subscribe_error)
+			}
+		}
+	}
+
+	fun unsubscribe(url: String) {
+		viewModelScope.launch { repository.unsubscribe(url) }
+	}
     fun findById(id: String): MediaItem? {
         val state = _uiState.value
         return if (state is UiState.Success) state.items.find { it.id == id } else null

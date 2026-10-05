@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -219,4 +221,44 @@ fun SkeletonBox(modifier: Modifier = Modifier,cornerRadius: Dp = 4.dp) {
 	Box(
 		modifier = modifier.clip(RoundedCornerShape(cornerRadius)).background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha)),
 	)
+}
+
+@Composable
+fun SubscriptionsScreen(viewModel: MediaViewModel, modifier: Modifier = Modifier) {
+	val feeds by viewModel.subscribedFeeds.collectAsState()
+	val error by viewModel.subscribeError.collectAsState()
+	var input by remember { mutableStateOf("") }
+
+	Column(
+		modifier = modifier.fillMaxSize().padding(16.dp),
+		verticalArrangement = Arrangement.spacedBy(12.dp)
+	) {
+		OutlinedTextField(
+			value = input,
+			onValueChange = { input = it; viewModel.clearSubscribeError() },
+			label = { Text(stringResource(R.string.feed_url)) },
+			singleLine = true,
+			isError = error != null,
+			supportingText = error?.let { { Text(it) } },
+			modifier = Modifier.fillMaxWidth()
+		)
+		Button(
+			onClick = { viewModel.subscribe(input) { input = "" } },
+			enabled = input.isNotBlank()
+		) { Text(stringResource(R.string.subscribe)) }
+
+		LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+			items(feeds.toList(), key = { it }) { url ->
+				Row(
+					modifier = Modifier.fillMaxWidth(),
+					verticalAlignment = Alignment.CenterVertically
+				) {
+					Text(url, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+					IconButton(onClick = { viewModel.unsubscribe(url) }) {
+						Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.unsubscribe))
+					}
+				}
+			}
+		}
+	}
 }

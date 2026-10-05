@@ -16,6 +16,7 @@ import com.spiritfenix.stromr.ui.ListMediaScreen
 import com.spiritfenix.stromr.ui.MediaViewModel
 import com.spiritfenix.stromr.ui.PlayerScreen
 import com.spiritfenix.stromr.ui.PlayerViewModel
+import com.spiritfenix.stromr.ui.SubscriptionsScreen
 
 /**
  * Navigation graph for the app.
@@ -64,5 +65,12 @@ fun NavGraph(
             val mediaId = backStackEntry.arguments?.getString("mediaId")?: return@composable
             PlayerScreen(mediaId=mediaId,playerViewModel=playerViewModel,mediaViewModel=mediaViewModel)
         }
+		composable(
+			route = Routes.SUBSCRIPTIONS,
+			enterTransition = { slideInHorizontally(animationSpec = tween(200)){it} },
+			exitTransition = {fadeOut(animationSpec = tween(100))}
+		){
+			SubscriptionsScreen(mediaViewModel)
+		}
     }
 }

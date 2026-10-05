@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Subscriptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -87,6 +88,22 @@ class MainActivity : ComponentActivity() {
                                     unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             )
+							NavigationBarItem(
+								selected = currentRoute == Routes.SUBSCRIPTIONS,
+								onClick = {navController.navigate(Routes.SUBSCRIPTIONS){
+									launchSingleTop = true
+									popUpTo(Routes.SUBSCRIPTIONS)
+								}},
+								icon = { Icon(Icons.Default.Subscriptions, contentDescription = stringResource(R.string.subscriptions)) },
+								label = { Text(stringResource(R.string.subscriptions)) },
+								colors = NavigationBarItemDefaults.colors(
+									selectedIconColor = MaterialTheme.colorScheme.primary,
+									selectedTextColor = MaterialTheme.colorScheme.primary,
+									indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+									unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+									unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+								)
+							)
                         }
                     }
                 ) { innerPadding ->
