@@ -15,7 +15,7 @@ fun EpisodeEntity.toDomain(): MediaItem.Episode = MediaItem.Episode(
 )
 
 fun MediaItem.Episode.toEntity(): EpisodeEntity = EpisodeEntity(
-	guid = id.split("|").last(),
+	guid = id.removePrefix("$feedUrl|"),
 	feedUrl = feedUrl,
 	title = title,
 	audioUrl = audioUrl,
