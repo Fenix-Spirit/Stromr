@@ -15,5 +15,6 @@ data class EpisodeEntity(
 	val durationSec: Int,
 	val podcastTitle: String,
 	val description: String,
-	val episodeNumber: Int
+	val episodeNumber: Int,
+	val pubDate: Long
 )

@@ -15,6 +15,7 @@ sealed class MediaItem {
     abstract val audioUrl: String
     abstract val imageUrl: String
     abstract val durationSec:Int
+	abstract val pubDate: Long
 
     /**
      * @param podcastTitle
@@ -27,6 +28,7 @@ sealed class MediaItem {
         override val audioUrl: String,
         override val imageUrl: String,
         override val durationSec:Int,
+		override val pubDate: Long,
 		val feedUrl: String,
         val podcastTitle: String,
         val description: String,
@@ -42,6 +44,7 @@ sealed class MediaItem {
         override val audioUrl: String,
         override val imageUrl: String,
         override val durationSec:Int,
+		override val pubDate: Long,
         val artist: String,
         val album: String
     ): MediaItem()

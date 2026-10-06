@@ -3,6 +3,8 @@ package com.spiritfenix.stromr.data
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.StringReader
+import java.time.Instant
+import java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME
 
 object RssParser {
     fun parse(xml:String, feedUrl:String): List<MediaItem.Episode>{
@@ -12,7 +14,7 @@ object RssParser {
         parser.setInput(StringReader(xml))
 
         val episodes = mutableListOf<MediaItem.Episode>()
-        var podcastTitle = ""
+		var podcastTitle = ""
 
 		var currentGuid = ""
         var currentTitle = ""
@@ -21,6 +23,7 @@ object RssParser {
         var currentDescription = ""
         var insideItem = false
 		var currentEpisodeNumber = 0
+		var pubDate: Long = 0
 
         var eventType = parser.eventType
         while (eventType != XmlPullParser.END_DOCUMENT) {
@@ -36,6 +39,7 @@ object RssParser {
                             currentDescription = ""
 							currentGuid = ""
 							currentEpisodeNumber = 0
+							pubDate = 0
                         }
                         "title" -> {
                             val text = if (parser.next() == XmlPullParser.TEXT) parser.text else ""
@@ -60,6 +64,16 @@ object RssParser {
 							val text = if (parser.next() == XmlPullParser.TEXT) parser.text else ""
 							if (insideItem) currentEpisodeNumber = text.toInt()
 						}
+						"pubDate" -> {
+							val text = if (parser.next() == XmlPullParser.TEXT) parser.text else ""
+							if (insideItem) {
+								pubDate = try {
+									Instant.from(RFC_1123_DATE_TIME.parse(text)).toEpochMilli()
+								} catch (e: Exception) {
+									0L
+								}
+							}
+						}
                     }
                 }
                 XmlPullParser.END_TAG -> {
@@ -76,6 +90,7 @@ object RssParser {
 								podcastTitle = podcastTitle,
 								description = currentDescription,
 								episodeNumber = currentEpisodeNumber,
+								pubDate = pubDate
 							)
                         )
                     }

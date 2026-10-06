@@ -11,7 +11,8 @@ fun EpisodeEntity.toDomain(): MediaItem.Episode = MediaItem.Episode(
 	durationSec = durationSec,
 	podcastTitle = podcastTitle,
 	description = description,
-	episodeNumber = episodeNumber
+	episodeNumber = episodeNumber,
+	pubDate = pubDate
 )
 
 fun MediaItem.Episode.toEntity(): EpisodeEntity = EpisodeEntity(
@@ -23,5 +24,6 @@ fun MediaItem.Episode.toEntity(): EpisodeEntity = EpisodeEntity(
 	durationSec = durationSec,
 	podcastTitle = podcastTitle,
 	description = description,
-	episodeNumber = episodeNumber
+	episodeNumber = episodeNumber,
+	pubDate = pubDate
 )
