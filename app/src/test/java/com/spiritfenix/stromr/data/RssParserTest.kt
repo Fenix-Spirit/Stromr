@@ -81,4 +81,58 @@ class RssParserTest {
 		val b = RssParser.parse(feed, "https://b.com/feed")[0].id
 		assertNotEquals(a, b)
 	}
+
+	@Test
+	fun `parses feed with pubDate successfully`() {
+		val feed = """
+        <rss><channel><title>T</title>
+          <item>
+            <title>E</title>
+            <guid>1</guid>
+            <pubDate>Sun, 19 May 2024 15:30:00 GMT</pubDate>
+            <enclosure url="https://example.com/a.mp3" />
+          </item>
+        </channel></rss>
+    """.trimIndent()
+		val episodes = RssParser.parse(feed, "https://example.com/feed")
+		assertEquals(1, episodes.size)
+		assertEquals("E", episodes[0].title)
+		assertEquals(1716132600000L, episodes[0].pubDate)
+	}
+
+	@Test
+	fun `handles malformed pubDate gracefully`() {
+		val feed = """
+        <rss><channel><title>T</title>
+          <item>
+            <title>E</title>
+            <guid>1</guid>
+            <pubDate>malformed-date</pubDate>
+            <enclosure url="https://example.com/a.mp3" />
+          </item>
+        </channel></rss>
+    """.trimIndent()
+		val episodes = RssParser.parse(feed, "https://example.com/feed")
+		assertEquals(1, episodes.size)
+		assertEquals("E", episodes[0].title)
+		assertEquals(0L, episodes[0].pubDate)
+	}
+
+	@Test
+	fun `handles empty pubDate gracefully`() {
+		val feed = """
+        <rss><channel><title>T</title>
+          <item>
+            <title>E</title>
+            <guid>1</guid>
+            <pubDate></pubDate>
+            <enclosure url="https://example.com/a.mp3" />
+          </item>
+        </channel></rss>
+    """.trimIndent()
+		val episodes = RssParser.parse(feed, "https://example.com/feed")
+		assertEquals(1, episodes.size)
+		assertEquals("E", episodes[0].title)
+		assertEquals(0L, episodes[0].pubDate)
+	}
 }
