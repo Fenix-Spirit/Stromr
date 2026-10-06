@@ -53,6 +53,9 @@ class MediaViewModel(application: Application): AndroidViewModel(application) {
 				}
 			} finally {
                 hasAttemptedRefresh = true
+				if (_uiState.value is UiState.Loading) {
+					_uiState.value = UiState.Success(emptyList())
+				}
             }
         }
     }
