@@ -1,7 +1,7 @@
 package com.spiritfenix.stromr.navigation
 
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.runtime.Composable
@@ -43,7 +43,7 @@ fun NavGraph(
         }
         composable(
             Routes.SONG_LIST,
-            enterTransition = { slideInHorizontally(animationSpec = tween(200)){it} },
+            enterTransition = { slideInVertically(animationSpec = tween(200)){it} },
             exitTransition = {fadeOut(animationSpec = tween(100))}
         ){
             ListMediaScreen(
@@ -55,7 +55,7 @@ fun NavGraph(
         composable(
             route = Routes.PLAYER,
             arguments = listOf(navArgument("mediaId") { type = NavType.StringType }),
-            enterTransition = { fadeIn(animationSpec = tween(200)) },
+            enterTransition = { slideInVertically(animationSpec = tween(200)) },
             exitTransition = { fadeOut(animationSpec = tween(200)) }
         ){ backStackEntry ->
             val mediaId = backStackEntry.arguments?.getString("mediaId")?: return@composable
