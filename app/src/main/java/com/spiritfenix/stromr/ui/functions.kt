@@ -122,13 +122,13 @@ fun ListMediaScreen(
 				verticalArrangement = Arrangement.Center
 			) {
 				Text(
-					text = "We weren't able to load the feed. Please try again.",
+					text = stringResource(id = R.string.feed_loading_error),
 					style = MaterialTheme.typography.bodyMedium,
 					color = MaterialTheme.colorScheme.onSurfaceVariant
 				)
 				Spacer(modifier = Modifier.height(12.dp))
 				Button(onClick = { viewModel.refresh() }) {
-					Text("Retry")
+					Text(stringResource(id = R.string.retry))
 				}
 			}
 		}

@@ -15,4 +15,6 @@
     <string name="feed_url">Feed URL</string>
     <string name="subscribe">Subscribe</string>
     <string name="unsubscribe">Unsubscribe</string>
+    <string name="retry">Retry</string>
+    <string name="feed_loading_error">We weren\'t able to load the feed. Please try again.</string>
 </resources>
