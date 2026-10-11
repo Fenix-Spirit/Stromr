@@ -30,6 +30,7 @@ class PlaybackService : MediaSessionService() {
 					.build(),
 				true
 			)
+			.setHandleAudioBecomingNoisy(true)
 			.build()
         mediaSession = MediaSession.Builder(this, player).build()
     }
