@@ -3,84 +3,81 @@ package com.spiritfenix.stromr.data
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserFactory
 import java.io.StringReader
+import java.time.DateTimeException
 import java.time.Instant
 import java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME
 
 object RssParser {
-    fun parse(xml:String, feedUrl:String): List<MediaItem.Episode>{
-        val factory = XmlPullParserFactory.newInstance()
-        factory.isNamespaceAware = true
-        val parser = factory.newPullParser()
-        parser.setInput(StringReader(xml))
+	fun parse(xml:String, feedUrl:String): List<MediaItem.Episode>{
+		val factory = XmlPullParserFactory.newInstance()
+		factory.isNamespaceAware = true
+		val parser = factory.newPullParser()
+		parser.setInput(StringReader(xml))
 
-        val episodes = mutableListOf<MediaItem.Episode>()
+		val episodes = mutableListOf<MediaItem.Episode>()
 		var podcastTitle = ""
 
 		var currentGuid = ""
-        var currentTitle = ""
-        var currentAudioUrl = ""
-        var currentDurationSec = 0
-        var currentDescription = ""
-        var insideItem = false
+		var currentTitle = ""
+		var currentAudioUrl = ""
+		var currentDurationSec = 0
+		var currentDescription = ""
+		var insideItem = false
 		var currentEpisodeNumber = 0
 		var pubDate: Long = 0
 
-        var eventType = parser.eventType
-        while (eventType != XmlPullParser.END_DOCUMENT) {
-            when (eventType) {
-                XmlPullParser.START_TAG -> {
-                    when (parser.name) {
-                        "channel" -> { /* no-op, just context */ }
-                        "item" -> {
-                            insideItem = true
-                            currentTitle = ""
-                            currentAudioUrl = ""
-                            currentDurationSec = 0
-                            currentDescription = ""
+		var eventType = parser.eventType
+		while (eventType != XmlPullParser.END_DOCUMENT) {
+			when (eventType) {
+				XmlPullParser.START_TAG -> {
+					when (parser.name) {
+						"channel" -> { /* no-op, just context */ }
+						"item" -> {
+							insideItem = true
+							currentTitle = ""
+							currentAudioUrl = ""
+							currentDurationSec = 0
+							currentDescription = ""
 							currentGuid = ""
 							currentEpisodeNumber = 0
 							pubDate = 0
-                        }
-                        "title" -> {
-                            val text = if (parser.next() == XmlPullParser.TEXT) parser.text else ""
-                            if (insideItem) currentTitle = text else podcastTitle = text
-                        }
-                        "enclosure" -> {
-                            currentAudioUrl = parser.getAttributeValue(null, "url") ?: ""
-                        }
-                        "duration" -> {
-                            val text = if (parser.next() == XmlPullParser.TEXT) parser.text else ""
-                            currentDurationSec = parseDurationToSeconds(text)
-                        }
-                        "description" -> {
-                            val text = if (parser.next() == XmlPullParser.TEXT) parser.text else ""
-                            if (insideItem) currentDescription = text
-                        }
+						}
+						"title" -> {
+							val text = if (parser.next() == XmlPullParser.TEXT) parser.text else ""
+							if (insideItem) currentTitle = text else podcastTitle = text
+						}
+						"enclosure" -> {
+							currentAudioUrl = parser.getAttributeValue(null, "url") ?: ""
+						}
+						"duration" -> {
+							val text = if (parser.next() == XmlPullParser.TEXT) parser.text else ""
+							currentDurationSec = parseDurationToSeconds(text)
+						}
+						"description" -> {
+							val text = if (parser.next() == XmlPullParser.TEXT) parser.text else ""
+							if (insideItem) currentDescription = text
+						}
 						"guid" -> {
 							val text = if (parser.next() == XmlPullParser.TEXT) parser.text else ""
 							if (insideItem) currentGuid = text
 						}
 						"episode" -> {
 							val text = if (parser.next() == XmlPullParser.TEXT) parser.text else ""
-							if (insideItem) currentEpisodeNumber = text.toInt()
+							if (insideItem) currentEpisodeNumber = Regex("[0-9]+").find(text)?.value?.toInt() ?: 0
 						}
 						"pubDate" -> {
 							val text = if (parser.next() == XmlPullParser.TEXT) parser.text else ""
 							if (insideItem) {
-								pubDate = try {
-									Instant.from(RFC_1123_DATE_TIME.parse(text)).toEpochMilli()
-								} catch (e: Exception) {
-									0L
-								}
+								pubDate = parseRssDate(text)
 							}
 						}
-                    }
-                }
-                XmlPullParser.END_TAG -> {
-                    if (parser.name == "item") {
-                        insideItem = false
-                        episodes.add(
-                            MediaItem.Episode(
+					}
+				}
+				XmlPullParser.END_TAG -> {
+					if (parser.name == "item") {
+						insideItem = false
+						episodes.add(
+							MediaItem.Episode(
 								id = "$feedUrl|${currentGuid.ifEmpty { currentAudioUrl }}",
 								feedUrl = feedUrl,
 								title = currentTitle,
@@ -92,14 +89,14 @@ object RssParser {
 								episodeNumber = currentEpisodeNumber,
 								pubDate = pubDate
 							)
-                        )
-                    }
-                }
-            }
-            eventType = parser.next()
-        }
+						)
+					}
+				}
+			}
+			eventType = parser.next()
+		}
 		val total=episodes.size
-        return episodes.mapIndexed { index, episode ->
+		return episodes.mapIndexed { index, episode ->
 			if(episode.episodeNumber!=0){
 				episode
 			}
@@ -107,15 +104,39 @@ object RssParser {
 				episode.copy(episodeNumber = total-index)
 			}
 		}
-    }
-
-    private fun parseDurationToSeconds(raw: String): Int {
-        val parts = raw.trim().split(":").mapNotNull { it.toIntOrNull() }
-        return when (parts.size) {
-            3 -> parts[0] * 3600 + parts[1] * 60 + parts[2]
-            2 -> parts[0] * 60 + parts[1]
-            1 -> parts[0]
-            else -> 0
-        }
-    }
+	}
+	private fun parseDurationToSeconds(raw: String): Int {
+		val parts = raw.trim().split(":").mapNotNull { it.toIntOrNull() }
+		return when (parts.size) {
+			3 -> parts[0] * 3600 + parts[1] * 60 + parts[2]
+			2 -> parts[0] * 60 + parts[1]
+			1 -> parts[0]
+			else -> 0
+		}
+	}
+	private val zoneOffsets = mapOf(
+		"UT" to "+0000", "UTC" to "+0000",
+		"EST" to "-0500", "EDT" to "-0400",
+		"CST" to "-0600", "CDT" to "-0500",
+		"MST" to "-0700", "MDT" to "-0600",
+		"PST" to "-0800", "PDT" to "-0700"
+	)
+	private val weekdayPrefix = Regex("^[A-Za-z]{3},\\s*")
+	private val trailingZone = Regex("\\s([A-Za-z]+)$")
+	private fun parseRssDate(raw: String): Long {
+		val text = raw.trim().replace(Regex("\\s+"), " ")
+		if (text.isEmpty()) return 0L
+		return tryParse(text) ?: tryParse(normalizeDate(text)) ?: 0L
+	}
+	private fun tryParse(text: String): Long? = try {
+		Instant.from(RFC_1123_DATE_TIME.parse(text)).toEpochMilli()
+	} catch (e: DateTimeException) {
+		null
+	}
+	private fun normalizeDate(text: String): String {
+		val noWeekday = text.replace(weekdayPrefix, "")
+		val zone = trailingZone.find(noWeekday) ?: return noWeekday
+		val offset = zoneOffsets[zone.groupValues[1].uppercase()] ?: return noWeekday
+		return noWeekday.substring(0, zone.groups[1]!!.range.first) + offset
+	}
 }
