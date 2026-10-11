@@ -1,6 +1,11 @@
 package com.spiritfenix.stromr.ui
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -14,10 +19,12 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -25,6 +32,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.media3.common.C
 import com.spiritfenix.stromr.R
 import com.spiritfenix.stromr.data.MediaItem
@@ -168,6 +176,7 @@ fun PlayerScreen(
 	mediaViewModel: MediaViewModel
 ) {
 	val mediaId by playerViewModel.currentMediaId.collectAsState()
+	RequestNotificationPermissionOnce(trigger = mediaId != null)
 	val isPlaying by playerViewModel.isPlaying.collectAsState()
 	val uiState by mediaViewModel.uiState.collectAsState()
 	val media = (uiState as? UiState.Success)?.items?.find { it.id == mediaId }
@@ -206,6 +215,24 @@ fun PlayerScreen(
 		) {
 			PlayerArtwork(Modifier.size(256.dp))
 			PlayerInfo(media.title, position, duration, seek, isPlaying, playerViewModel::togglePlayPause, Modifier.fillMaxWidth())
+		}
+	}
+}
+@Composable
+private fun RequestNotificationPermissionOnce(trigger: Boolean) {
+	if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+	val context = LocalContext.current
+	val launcher = rememberLauncherForActivityResult(
+		ActivityResultContracts.RequestPermission()
+	) {}
+	var asked by rememberSaveable { mutableStateOf(false) }
+	LaunchedEffect(trigger) {
+		if (trigger && !asked) {
+			asked = true
+			val granted = ContextCompat.checkSelfPermission(
+				context, Manifest.permission.POST_NOTIFICATIONS
+			) == PackageManager.PERMISSION_GRANTED
+			if (!granted) launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
 		}
 	}
 }
