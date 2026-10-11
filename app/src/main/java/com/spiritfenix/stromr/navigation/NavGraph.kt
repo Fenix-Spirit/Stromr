@@ -25,6 +25,10 @@ fun NavGraph(
     playerViewModel: PlayerViewModel,
     mediaViewModel: MediaViewModel
 ){
+	val openPlayer: (String) -> Unit = { id ->
+		mediaViewModel.findById(id)?.let { playerViewModel.play(it) }
+		navController.navigate(Routes.PLAYER) { launchSingleTop = true }
+	}
     NavHost(
         navController=navController,
         startDestination = Routes.PLAYER,
@@ -37,7 +41,7 @@ fun NavGraph(
         ){
             ListMediaScreen(
                 filter = { it is MediaItem.Episode },
-                onItemTap= {mediaId->navController.navigate(Routes.player(mediaId))},
+                onItemTap= openPlayer,
                 viewModel=mediaViewModel
             )
         }
@@ -48,18 +52,16 @@ fun NavGraph(
         ){
             ListMediaScreen(
                 filter = { it is MediaItem.Song},
-                onItemTap= {mediaId->navController.navigate(Routes.player(mediaId))},
+                onItemTap= openPlayer,
                 viewModel=mediaViewModel
             )
         }
         composable(
             route = Routes.PLAYER,
-            arguments = listOf(navArgument("mediaId") { type = NavType.StringType }),
             enterTransition = { slideInVertically(animationSpec = tween(200)){it} },
             exitTransition = { fadeOut(animationSpec = tween(100)) }
-        ){ backStackEntry ->
-            val mediaId = backStackEntry.arguments?.getString("mediaId")?: return@composable
-            PlayerScreen(mediaId=mediaId,playerViewModel=playerViewModel,mediaViewModel=mediaViewModel)
+        ){
+            PlayerScreen(playerViewModel=playerViewModel,mediaViewModel=mediaViewModel)
         }
 		composable(
 			route = Routes.SUBSCRIPTIONS,

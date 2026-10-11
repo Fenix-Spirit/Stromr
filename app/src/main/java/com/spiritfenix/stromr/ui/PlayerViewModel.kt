@@ -24,100 +24,111 @@ import androidx.media3.common.MediaItem as Media3Item
  * @see PlaybackService
  */
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
-    private var controller: MediaController? = null
-    private var controllerFuture: ListenableFuture<MediaController>? = null
-    private var pendingItem: MediaItem? = null
-    val player: Player?
-        get() = controller
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
-    private val playerListener = object : Player.Listener {
-        override fun onPlayerError(error: PlaybackException) {
-            _errorMessage.value = friendlyMessage(error)
-        }
-    }
-    init {
-        val sessionToken = SessionToken(
-            application,
-            ComponentName(application, PlaybackService::class.java)
-        )
-        controllerFuture = MediaController.Builder(application, sessionToken).buildAsync()
-        controllerFuture?.addListener(
-            {
-                controller = controllerFuture?.get()
-                controller?.addListener(playerListener)
-                pendingItem?.let { item ->
-                    startPlayback(item)
-                    pendingItem = null
-                }
-            },
-            ContextCompat.getMainExecutor(application)
-        )
-    }
+	private var controller: MediaController? = null
+	private var controllerFuture: ListenableFuture<MediaController>? = null
+	private var pendingItem: MediaItem? = null
+	val player: Player?
+		get() = controller
+	private val _errorMessage = MutableStateFlow<String?>(null)
+	val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+	private val _currentMediaId = MutableStateFlow<String?>(null)
+	val currentMediaId: StateFlow<String?> = _currentMediaId.asStateFlow()
+	private val playerListener = object : Player.Listener {
+		override fun onPlayerError(error: PlaybackException) {
+			_errorMessage.value = friendlyMessage(error)
+		}
+		override fun onMediaItemTransition(mediaItem: Media3Item?, reason: Int) {
+			_currentMediaId.value = mediaItem?.mediaId
+		}
+	}
+	init {
+		val sessionToken = SessionToken(
+			application,
+			ComponentName(application, PlaybackService::class.java)
+		)
+		controllerFuture = MediaController.Builder(application, sessionToken).buildAsync()
+		controllerFuture?.addListener(
+			{
+				controller = controllerFuture?.get()
+				controller?.addListener(playerListener)
+				_currentMediaId.value = controller?.currentMediaItem?.mediaId
+				pendingItem?.let { item ->
+					startPlayback(item)
+					pendingItem = null
+				}
+			},
+			ContextCompat.getMainExecutor(application)
+		)
+	}
 
-    /**
-     * Plays the given [MediaItem].
-     * @param item the [MediaItem] to play
-     * @see MediaItem
-     * @see startPlayback
-     */
-    fun play(item: MediaItem) {
-        if (controller != null) {
-            startPlayback(item)
-        } else {
-            pendingItem = item
-        }
-    }
-    /**
-     * Starts playback of the given [MediaItem].
-     * @param item the [MediaItem] to play, passed down from the parent (should be [play])
-     * @see MediaItem
-     * @see play
-     */
-    private fun startPlayback(item: MediaItem) {
-        val metadata = MediaMetadata.Builder()
-            .setTitle(item.title)
-            .setArtist(
-                when (item) {
-                    is MediaItem.Episode -> item.podcastTitle
-                    is MediaItem.Song -> item.artist
-                }
-            )
-            .build()
-        val media3Item = Media3Item.Builder().setUri(item.audioUrl).setMediaMetadata(metadata).build()
-        controller?.apply {
-            setMediaItem(media3Item)
-            prepare()
-            play()
-        }
-    }
-    override fun onCleared() {
-        controller?.removeListener(playerListener)
-        controllerFuture?.let { MediaController.releaseFuture(it) }
-        super.onCleared()
-    }
-    fun clearError(){
-        _errorMessage.value=null
-    }
+	/**
+	 * Plays the given [MediaItem].
+	 * @param item the [MediaItem] to play
+	 * @see MediaItem
+	 * @see startPlayback
+	 */
+	fun play(item: MediaItem) {
+		val c = controller
+		if (c == null) {
+			_currentMediaId.value = item.id
+			pendingItem = item
+			return
+		}
+		val sameItem = c.currentMediaItem?.mediaId == item.id
+		val active = c.playbackState == Player.STATE_READY || c.playbackState == Player.STATE_BUFFERING
+		if (sameItem && active) return
+		startPlayback(item)
+	}
+	/**
+	 * Starts playback of the given [MediaItem].
+	 * @param item the [MediaItem] to play, passed down from the parent (should be [play])
+	 * @see MediaItem
+	 * @see play
+	 */
+	private fun startPlayback(item: MediaItem) {
+		val metadata = MediaMetadata.Builder()
+			.setTitle(item.title)
+			.setArtist(
+				when (item) {
+					is MediaItem.Episode -> item.podcastTitle
+					is MediaItem.Song -> item.artist
+				}
+			)
+			.build()
+		val media3Item = Media3Item.Builder().setMediaId(item.id).setUri(item.audioUrl).setMediaMetadata(metadata).build()
+		controller?.apply {
+			setMediaItem(media3Item)
+			prepare()
+			play()
+		}
+	}
+	override fun onCleared() {
+		controller?.removeListener(playerListener)
+		controllerFuture?.let { MediaController.releaseFuture(it) }
+		super.onCleared()
+	}
+	fun clearError(){
+		_errorMessage.value=null
+	}
 
-    /**
-     * Returns a user-friendly error message from a [PlaybackException].
-     */
-    private fun friendlyMessage(error: PlaybackException): String {
-        val context = getApplication<Application>()
-        return when (error.errorCode) {
-            PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
-            PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT ->
-                context.getString(R.string.network_error)
-            PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS ->
-                context.getString(R.string.server_error)
-            PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND ->
-                context.getString(R.string.io_error)
-            PlaybackException.ERROR_CODE_DECODER_INIT_FAILED,
-            PlaybackException.ERROR_CODE_DECODING_FAILED ->
-                context.getString(R.string.wrong_format_error)
-            else ->
-                context.getString(R.string.default_error)+error.errorCodeName
-        }
-    }
+	/**
+	 * Returns a user-friendly error message from a [PlaybackException].
+	 */
+	private fun friendlyMessage(error: PlaybackException): String {
+		val context = getApplication<Application>()
+		return when (error.errorCode) {
+			PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
+			PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT ->
+				context.getString(R.string.network_error)
+			PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS ->
+				context.getString(R.string.server_error)
+			PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND ->
+				context.getString(R.string.io_error)
+			PlaybackException.ERROR_CODE_DECODER_INIT_FAILED,
+			PlaybackException.ERROR_CODE_DECODING_FAILED ->
+				context.getString(R.string.wrong_format_error)
+			else ->
+				context.getString(R.string.default_error)+error.errorCodeName
+		}
+	}
 }

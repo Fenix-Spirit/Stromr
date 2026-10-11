@@ -1,7 +1,5 @@
 package com.spiritfenix.stromr.navigation
 
-import android.net.Uri
-
 /**
  * Options->
  * @property EPISODE_LIST
@@ -12,7 +10,7 @@ import android.net.Uri
 object Routes {
     const val EPISODE_LIST = "episode_list"
     const val SONG_LIST = "song_list"
-    const val PLAYER = "player/{mediaId}"
+    const val PLAYER = "player"
 	const val SUBSCRIPTIONS = "subscriptions"
-    fun player(mediaId: String) = "player/${Uri.encode(mediaId)}"
+
 }

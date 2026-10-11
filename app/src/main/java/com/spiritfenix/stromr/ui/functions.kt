@@ -159,13 +159,17 @@ fun ListMediaScreen(
  */
 @Composable
 fun PlayerScreen(
-	mediaId: String,
 	playerViewModel: PlayerViewModel,
 	mediaViewModel: MediaViewModel
 ) {
-	val media= mediaViewModel.findById(mediaId)?:return
-	LaunchedEffect(media) {
-		playerViewModel.play(media)
+	val mediaId by playerViewModel.currentMediaId.collectAsState()
+	val uiState by mediaViewModel.uiState.collectAsState()
+	val media = (uiState as? UiState.Success)?.items?.find { it.id == mediaId }
+	if (media == null) {
+		Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+			Text(stringResource(R.string.nothing_playing))
+		}
+		return
 	}
 	var position by remember { mutableLongStateOf(0L) }
 	var duration by remember { mutableLongStateOf(0L) }
