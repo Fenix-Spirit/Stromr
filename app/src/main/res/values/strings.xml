@@ -21,4 +21,6 @@
     <string name="nothing_playing">Nothing playing yet</string>
     <string name="play">Play</string>
     <string name="pause">Pause</string>
+    <string name="skip_forward">Skip forward 30 seconds</string>
+    <string name="skip_back">Skip back 10 seconds</string>
 </resources>

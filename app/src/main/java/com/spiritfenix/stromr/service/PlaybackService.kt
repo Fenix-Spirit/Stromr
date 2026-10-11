@@ -1,10 +1,12 @@
 package com.spiritfenix.stromr.service
 
+import androidx.annotation.OptIn
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
+import androidx.media3.common.util.UnstableApi
 
 /**
  * Service for playback.
@@ -20,7 +22,8 @@ class PlaybackService : MediaSessionService() {
     private lateinit var player: ExoPlayer
     private lateinit var mediaSession: MediaSession
 
-    override fun onCreate() {
+	@OptIn(UnstableApi::class)
+	override fun onCreate() {
         super.onCreate()
         player = ExoPlayer.Builder(this)
 			.setAudioAttributes(
@@ -31,6 +34,8 @@ class PlaybackService : MediaSessionService() {
 				true
 			)
 			.setHandleAudioBecomingNoisy(true)
+			.setSeekBackIncrementMs(10_000)
+			.setSeekForwardIncrementMs(30_000)
 			.build()
         mediaSession = MediaSession.Builder(this, player).build()
     }

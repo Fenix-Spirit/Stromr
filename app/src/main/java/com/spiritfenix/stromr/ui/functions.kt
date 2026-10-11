@@ -15,8 +15,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Forward30
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Replay10
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -205,7 +207,7 @@ fun PlayerScreen(
 			horizontalArrangement = Arrangement.spacedBy(32.dp)
 		) {
 			PlayerArtwork(Modifier.fillMaxHeight().aspectRatio(1f, matchHeightConstraintsFirst = true))
-			PlayerInfo(media.title, position, duration, seek, isPlaying, playerViewModel::togglePlayPause, Modifier.weight(1f))
+			PlayerInfo(media.title, position, duration, seek, isPlaying, playerViewModel::togglePlayPause, playerViewModel::skipBack, playerViewModel::skipForward, Modifier.weight(1f))
 		}
 	} else {
 		Column(
@@ -214,7 +216,7 @@ fun PlayerScreen(
 			verticalArrangement = Arrangement.SpaceAround
 		) {
 			PlayerArtwork(Modifier.size(256.dp))
-			PlayerInfo(media.title, position, duration, seek, isPlaying, playerViewModel::togglePlayPause, Modifier.fillMaxWidth())
+			PlayerInfo(media.title, position, duration, seek, isPlaying, playerViewModel::togglePlayPause,playerViewModel::skipBack, playerViewModel::skipForward, Modifier.fillMaxWidth())
 		}
 	}
 }
@@ -259,6 +261,8 @@ private fun PlayerInfo(
 	onSeek: (Long) -> Unit,
 	isPlaying: Boolean,
 	onTogglePlayPause: () -> Unit,
+	onSkipBack: () -> Unit,
+	onSkipForward: () -> Unit,
 	modifier: Modifier = Modifier
 ) {
 	Column(
@@ -283,12 +287,31 @@ private fun PlayerInfo(
 		} else {
 			SkeletonBox(modifier = Modifier.height(14.dp).width(64.dp))
 		}
-		FilledIconButton(onClick = onTogglePlayPause, modifier = Modifier.size(64.dp)) {
-			Icon(
-				imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-				contentDescription = stringResource(if (isPlaying) R.string.pause else R.string.play),
-				modifier = Modifier.size(36.dp)
-			)
+		Row(
+			verticalAlignment = Alignment.CenterVertically,
+			horizontalArrangement = Arrangement.spacedBy(16.dp)
+		) {
+			IconButton(onClick = onSkipBack, modifier = Modifier.size(48.dp)) {
+				Icon(
+					Icons.Default.Replay10,
+					contentDescription = stringResource(R.string.skip_back),
+					modifier = Modifier.size(32.dp)
+				)
+			}
+			FilledIconButton(onClick = onTogglePlayPause, modifier = Modifier.size(64.dp)) {
+				Icon(
+					imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+					contentDescription = stringResource(if (isPlaying) R.string.pause else R.string.play),
+					modifier = Modifier.size(36.dp)
+				)
+			}
+			IconButton(onClick = onSkipForward, modifier = Modifier.size(48.dp)) {
+				Icon(
+					Icons.Default.Forward30,
+					contentDescription = stringResource(R.string.skip_forward),
+					modifier = Modifier.size(32.dp)
+				)
+			}
 		}
 	}
 }

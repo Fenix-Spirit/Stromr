@@ -21,4 +21,6 @@
     <string name="nothing_playing">Nada a reproduzir</string>
     <string name="play">Reproduzir</string>
     <string name="pause">Pausar</string>
+    <string name="skip_forward">Avançar 30 segundos</string>
+    <string name="skip_back">Recuar 10 segundos</string>
 </resources>

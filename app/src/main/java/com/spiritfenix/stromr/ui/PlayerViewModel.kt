@@ -96,6 +96,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 			c.play()
 		}
 	}
+	fun skipBack() { controller?.seekBack() }
+	fun skipForward() { controller?.seekForward() }
 	/**
 	 * Starts playback of the given [MediaItem].
 	 * @param item the [MediaItem] to play, passed down from the parent (should be [play])
