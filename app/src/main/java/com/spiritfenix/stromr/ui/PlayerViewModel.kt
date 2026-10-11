@@ -33,6 +33,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 	val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 	private val _currentMediaId = MutableStateFlow<String?>(null)
 	val currentMediaId: StateFlow<String?> = _currentMediaId.asStateFlow()
+	private val _isPlaying = MutableStateFlow(false)
+	val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
 	private val playerListener = object : Player.Listener {
 		override fun onPlayerError(error: PlaybackException) {
 			_errorMessage.value = friendlyMessage(error)
@@ -40,6 +42,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 		override fun onMediaItemTransition(mediaItem: Media3Item?, reason: Int) {
 			_currentMediaId.value = mediaItem?.mediaId
 		}
+		override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) = updateIsPlaying()
+		override fun onPlaybackStateChanged(playbackState: Int) = updateIsPlaying()
 	}
 	init {
 		val sessionToken = SessionToken(
@@ -52,6 +56,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 				controller = controllerFuture?.get()
 				controller?.addListener(playerListener)
 				_currentMediaId.value = controller?.currentMediaItem?.mediaId
+				updateIsPlaying()
 				pendingItem?.let { item ->
 					startPlayback(item)
 					pendingItem = null
@@ -79,6 +84,18 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 		if (sameItem && active) return
 		startPlayback(item)
 	}
+	fun togglePlayPause() {
+		val c = controller ?: return
+		if (_isPlaying.value) {
+			c.pause()
+		} else {
+			when (c.playbackState) {
+				Player.STATE_ENDED -> c.seekToDefaultPosition()
+				Player.STATE_IDLE -> c.prepare()
+			}
+			c.play()
+		}
+	}
 	/**
 	 * Starts playback of the given [MediaItem].
 	 * @param item the [MediaItem] to play, passed down from the parent (should be [play])
@@ -101,6 +118,12 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 			prepare()
 			play()
 		}
+	}
+	private fun updateIsPlaying() {
+		val c = controller ?: return
+		_isPlaying.value = c.playWhenReady &&
+			c.playbackState != Player.STATE_ENDED &&
+			c.playbackState != Player.STATE_IDLE
 	}
 	override fun onCleared() {
 		controller?.removeListener(playerListener)

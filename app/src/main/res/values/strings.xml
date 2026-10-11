@@ -19,4 +19,6 @@
     <string name="feed_loading_error">We weren\'t able to load the feed. Please try again.</string>
     <string name="player">Playing</string>
     <string name="nothing_playing">Nothing playing yet</string>
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
 </resources>

@@ -10,6 +10,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -166,6 +168,7 @@ fun PlayerScreen(
 	mediaViewModel: MediaViewModel
 ) {
 	val mediaId by playerViewModel.currentMediaId.collectAsState()
+	val isPlaying by playerViewModel.isPlaying.collectAsState()
 	val uiState by mediaViewModel.uiState.collectAsState()
 	val media = (uiState as? UiState.Success)?.items?.find { it.id == mediaId }
 	if (media == null) {
@@ -193,7 +196,7 @@ fun PlayerScreen(
 			horizontalArrangement = Arrangement.spacedBy(32.dp)
 		) {
 			PlayerArtwork(Modifier.fillMaxHeight().aspectRatio(1f, matchHeightConstraintsFirst = true))
-			PlayerInfo(media.title, position, duration, seek, Modifier.weight(1f))
+			PlayerInfo(media.title, position, duration, seek, isPlaying, playerViewModel::togglePlayPause, Modifier.weight(1f))
 		}
 	} else {
 		Column(
@@ -202,7 +205,7 @@ fun PlayerScreen(
 			verticalArrangement = Arrangement.SpaceAround
 		) {
 			PlayerArtwork(Modifier.size(256.dp))
-			PlayerInfo(media.title, position, duration, seek, Modifier.fillMaxWidth())
+			PlayerInfo(media.title, position, duration, seek, isPlaying, playerViewModel::togglePlayPause, Modifier.fillMaxWidth())
 		}
 	}
 }
@@ -227,6 +230,8 @@ private fun PlayerInfo(
 	position: Long,
 	duration: Long,
 	onSeek: (Long) -> Unit,
+	isPlaying: Boolean,
+	onTogglePlayPause: () -> Unit,
 	modifier: Modifier = Modifier
 ) {
 	Column(
@@ -250,6 +255,13 @@ private fun PlayerInfo(
 			)
 		} else {
 			SkeletonBox(modifier = Modifier.height(14.dp).width(64.dp))
+		}
+		FilledIconButton(onClick = onTogglePlayPause, modifier = Modifier.size(64.dp)) {
+			Icon(
+				imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+				contentDescription = stringResource(if (isPlaying) R.string.pause else R.string.play),
+				modifier = Modifier.size(36.dp)
+			)
 		}
 	}
 }
