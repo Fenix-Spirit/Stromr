@@ -29,7 +29,7 @@ fun NavGraph(
 	}
     NavHost(
         navController=navController,
-        startDestination = Routes.PLAYER,
+        startDestination = Routes.EPISODE_LIST,
         modifier = modifier
     ){
         composable(

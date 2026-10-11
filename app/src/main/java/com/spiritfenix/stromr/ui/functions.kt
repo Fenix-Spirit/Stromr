@@ -1,5 +1,6 @@
 package com.spiritfenix.stromr.ui
 
+import android.content.res.Configuration
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -14,8 +15,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -180,26 +183,72 @@ fun PlayerScreen(
 			delay(500.milliseconds)
 		}
 	}
-	Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.SpaceAround) {
-		Box(modifier = Modifier.size(256.dp).clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) {
-			Image(
-				modifier = Modifier.fillMaxSize(),
-				painter = painterResource(R.drawable.baseline_broken_image_24),
-				contentDescription = stringResource(R.string.default_image_description),
-			)
+	val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+	val seek: (Long) -> Unit = { playerViewModel.player?.seekTo(it * 1000) }
+
+	if (landscape) {
+		Row(
+			modifier = Modifier.fillMaxSize().padding(24.dp),
+			verticalAlignment = Alignment.CenterVertically,
+			horizontalArrangement = Arrangement.spacedBy(32.dp)
+		) {
+			PlayerArtwork(Modifier.fillMaxHeight().aspectRatio(1f, matchHeightConstraintsFirst = true))
+			PlayerInfo(media.title, position, duration, seek, Modifier.weight(1f))
 		}
+	} else {
+		Column(
+			modifier = Modifier.fillMaxSize().padding(24.dp),
+			horizontalAlignment = Alignment.CenterHorizontally,
+			verticalArrangement = Arrangement.SpaceAround
+		) {
+			PlayerArtwork(Modifier.size(256.dp))
+			PlayerInfo(media.title, position, duration, seek, Modifier.fillMaxWidth())
+		}
+	}
+}
+@Composable
+private fun PlayerArtwork(modifier: Modifier = Modifier) {
+	Box(
+		modifier = modifier
+			.clip(RoundedCornerShape(16.dp))
+			.background(MaterialTheme.colorScheme.surfaceVariant),
+		contentAlignment = Alignment.Center
+	) {
+		Image(
+			modifier = Modifier.fillMaxSize(),
+			painter = painterResource(R.drawable.baseline_broken_image_24),
+			contentDescription = stringResource(R.string.default_image_description),
+		)
+	}
+}
+@Composable
+private fun PlayerInfo(
+	title: String,
+	position: Long,
+	duration: Long,
+	onSeek: (Long) -> Unit,
+	modifier: Modifier = Modifier
+) {
+	Column(
+		modifier = modifier,
+		horizontalAlignment = Alignment.CenterHorizontally,
+		verticalArrangement = Arrangement.spacedBy(12.dp)
+	) {
 		Text(
-			text = "Playing item ${media.title}",
-			style = MaterialTheme.typography.headlineMedium
+			text = "Playing item $title",
+			style = MaterialTheme.typography.headlineMedium,
+			textAlign = TextAlign.Center,
+			maxLines = 2,
+			overflow = TextOverflow.Ellipsis
 		)
 		if (duration > 0) {
-			Text(
-				text="$position/${duration}s",
-				style=MaterialTheme.typography.bodySmall
+			Text(text = "$position/${duration}s", style = MaterialTheme.typography.bodySmall)
+			Slider(
+				value = position.toFloat(),
+				valueRange = 0f..duration.toFloat(),
+				onValueChange = { onSeek(it.toLong()) }
 			)
-			Slider(value = position.toFloat(), valueRange = 0f..duration.toFloat(), onValueChange = { playerViewModel.player?.seekTo(it.toLong()*1000) })
-		}
-		else{
+		} else {
 			SkeletonBox(modifier = Modifier.height(14.dp).width(64.dp))
 		}
 	}
