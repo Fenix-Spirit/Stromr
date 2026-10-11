@@ -27,7 +27,7 @@ fun NavGraph(
 ){
     NavHost(
         navController=navController,
-        startDestination = Routes.EPISODE_LIST,
+        startDestination = Routes.PLAYER,
         modifier = modifier
     ){
         composable(
@@ -43,7 +43,7 @@ fun NavGraph(
         }
         composable(
             Routes.SONG_LIST,
-            enterTransition = { slideInVertically(animationSpec = tween(200)){it} },
+            enterTransition = { slideInHorizontally(animationSpec = tween(200)){it} },
             exitTransition = {fadeOut(animationSpec = tween(100))}
         ){
             ListMediaScreen(
@@ -55,15 +55,15 @@ fun NavGraph(
         composable(
             route = Routes.PLAYER,
             arguments = listOf(navArgument("mediaId") { type = NavType.StringType }),
-            enterTransition = { slideInVertically(animationSpec = tween(200)) },
-            exitTransition = { fadeOut(animationSpec = tween(200)) }
+            enterTransition = { slideInVertically(animationSpec = tween(200)){it} },
+            exitTransition = { fadeOut(animationSpec = tween(100)) }
         ){ backStackEntry ->
             val mediaId = backStackEntry.arguments?.getString("mediaId")?: return@composable
             PlayerScreen(mediaId=mediaId,playerViewModel=playerViewModel,mediaViewModel=mediaViewModel)
         }
 		composable(
 			route = Routes.SUBSCRIPTIONS,
-			enterTransition = { slideInHorizontally(animationSpec = tween(200)){it} },
+			enterTransition = { slideInVertically(animationSpec = tween(200)){it} },
 			exitTransition = {fadeOut(animationSpec = tween(100))}
 		){
 			SubscriptionsScreen(mediaViewModel)
