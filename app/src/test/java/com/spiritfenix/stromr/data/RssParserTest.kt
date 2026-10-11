@@ -135,4 +135,29 @@ class RssParserTest {
 		assertEquals("E", episodes[0].title)
 		assertEquals(0L, episodes[0].pubDate)
 	}
+
+	private fun pubDateOf(date: String): Long {
+		val feed = """<rss><channel><title>T</title><item><title>E</title><guid>1</guid><pubDate>$date</pubDate><enclosure url="https://example.com/a.mp3" /></item></channel></rss>"""
+		return RssParser.parse(feed, "https://example.com/feed")[0].pubDate
+	}
+
+	@Test
+	fun `pubDate surrounded by whitespace is parsed`() {
+		assertEquals(1716132600000L, pubDateOf("\n   Sun, 19 May 2024 15:30:00 GMT\n  "))
+	}
+
+	@Test
+	fun `pubDate with named zone is converted`() {
+		assertEquals(1716150600000L, pubDateOf("Sun, 19 May 2024 15:30:00 EST"))
+	}
+
+	@Test
+	fun `pubDate with wrong weekday is still parsed`() {
+		assertEquals(1716132600000L, pubDateOf("Mon, 19 May 2024 15:30:00 GMT"))
+	}
+
+	@Test
+	fun `pubDate with numeric offset is parsed`() {
+		assertEquals(1716129000000L, pubDateOf("Sun, 19 May 2024 15:30:00 +0100"))
+	}
 }
