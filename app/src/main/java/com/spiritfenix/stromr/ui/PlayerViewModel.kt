@@ -6,6 +6,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
+import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
@@ -35,6 +36,8 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 	val currentMediaId: StateFlow<String?> = _currentMediaId.asStateFlow()
 	private val _isPlaying = MutableStateFlow(false)
 	val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
+	private val _playbackSpeed = MutableStateFlow(1f)
+	val playbackSpeed: StateFlow<Float> = _playbackSpeed.asStateFlow()
 	private val playerListener = object : Player.Listener {
 		override fun onPlayerError(error: PlaybackException) {
 			_errorMessage.value = friendlyMessage(error)
@@ -44,6 +47,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 		}
 		override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) = updateIsPlaying()
 		override fun onPlaybackStateChanged(playbackState: Int) = updateIsPlaying()
+		override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
+			_playbackSpeed.value = playbackParameters.speed
+		}
 	}
 	init {
 		val sessionToken = SessionToken(
@@ -56,6 +62,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 				controller = controllerFuture?.get()
 				controller?.addListener(playerListener)
 				_currentMediaId.value = controller?.currentMediaItem?.mediaId
+				_playbackSpeed.value = controller?.playbackParameters?.speed ?: 1f
 				updateIsPlaying()
 				pendingItem?.let { item ->
 					startPlayback(item)
@@ -126,6 +133,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 		_isPlaying.value = c.playWhenReady &&
 			c.playbackState != Player.STATE_ENDED &&
 			c.playbackState != Player.STATE_IDLE
+	}
+	fun setPlaybackSpeed(speed: Float){
+		_playbackSpeed.value = speed
+		controller?.setPlaybackSpeed(speed)
 	}
 	override fun onCleared() {
 		controller?.removeListener(playerListener)

@@ -12,13 +12,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Forward30
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Replay10
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -39,6 +37,7 @@ import androidx.media3.common.C
 import com.spiritfenix.stromr.R
 import com.spiritfenix.stromr.data.MediaItem
 import kotlinx.coroutines.delay
+import kotlin.math.round
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
@@ -164,7 +163,6 @@ fun ListMediaScreen(
 
 /**
  * Displays a player screen with information of the given media item
- * @param mediaId the id of the media item to play
  * @param playerViewModel the view model for the player (passed down from the parent)
  * @param mediaViewModel the view model for the media items (passed down from the parent)
  * @see MediaItem
@@ -207,7 +205,7 @@ fun PlayerScreen(
 			horizontalArrangement = Arrangement.spacedBy(32.dp)
 		) {
 			PlayerArtwork(Modifier.fillMaxHeight().aspectRatio(1f, matchHeightConstraintsFirst = true))
-			PlayerInfo(media.title, position, duration, seek, isPlaying, playerViewModel::togglePlayPause, playerViewModel::skipBack, playerViewModel::skipForward, Modifier.weight(1f))
+			PlayerInfo(media.title, position, duration, seek, isPlaying, playerViewModel::togglePlayPause, playerViewModel::skipBack, playerViewModel::skipForward, playerViewModel, Modifier.weight(1f))
 		}
 	} else {
 		Column(
@@ -216,7 +214,7 @@ fun PlayerScreen(
 			verticalArrangement = Arrangement.SpaceAround
 		) {
 			PlayerArtwork(Modifier.size(256.dp))
-			PlayerInfo(media.title, position, duration, seek, isPlaying, playerViewModel::togglePlayPause,playerViewModel::skipBack, playerViewModel::skipForward, Modifier.fillMaxWidth())
+			PlayerInfo(media.title, position, duration, seek, isPlaying, playerViewModel::togglePlayPause,playerViewModel::skipBack, playerViewModel::skipForward, playerViewModel, Modifier.fillMaxWidth())
 		}
 	}
 }
@@ -263,6 +261,7 @@ private fun PlayerInfo(
 	onTogglePlayPause: () -> Unit,
 	onSkipBack: () -> Unit,
 	onSkipForward: () -> Unit,
+	playerViewModel: PlayerViewModel? = null,
 	modifier: Modifier = Modifier
 ) {
 	Column(
@@ -287,31 +286,41 @@ private fun PlayerInfo(
 		} else {
 			SkeletonBox(modifier = Modifier.height(14.dp).width(64.dp))
 		}
-		Row(
-			verticalAlignment = Alignment.CenterVertically,
-			horizontalArrangement = Arrangement.spacedBy(16.dp)
+		Box(
+			modifier = Modifier.fillMaxWidth(),
+			contentAlignment = Alignment.Center
 		) {
-			IconButton(onClick = onSkipBack, modifier = Modifier.size(48.dp)) {
-				Icon(
-					Icons.Default.Replay10,
-					contentDescription = stringResource(R.string.skip_back),
-					modifier = Modifier.size(32.dp)
-				)
+			Row(
+				modifier = Modifier.align(Alignment.Center),
+				verticalAlignment = Alignment.CenterVertically,
+				horizontalArrangement = Arrangement.spacedBy(16.dp)
+			) {
+				IconButton(onClick = onSkipBack, modifier = Modifier.size(48.dp)) {
+					Icon(
+						Icons.Default.Replay10,
+						contentDescription = stringResource(R.string.skip_back),
+						modifier = Modifier.size(32.dp)
+					)
+				}
+				FilledIconButton(onClick = onTogglePlayPause, modifier = Modifier.size(64.dp)) {
+					Icon(
+						imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+						contentDescription = stringResource(if (isPlaying) R.string.pause else R.string.play),
+						modifier = Modifier.size(36.dp)
+					)
+				}
+				IconButton(onClick = onSkipForward, modifier = Modifier.size(48.dp)) {
+					Icon(
+						Icons.Default.Forward30,
+						contentDescription = stringResource(R.string.skip_forward),
+						modifier = Modifier.size(32.dp)
+					)
+				}
 			}
-			FilledIconButton(onClick = onTogglePlayPause, modifier = Modifier.size(64.dp)) {
-				Icon(
-					imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-					contentDescription = stringResource(if (isPlaying) R.string.pause else R.string.play),
-					modifier = Modifier.size(36.dp)
-				)
-			}
-			IconButton(onClick = onSkipForward, modifier = Modifier.size(48.dp)) {
-				Icon(
-					Icons.Default.Forward30,
-					contentDescription = stringResource(R.string.skip_forward),
-					modifier = Modifier.size(32.dp)
-				)
-			}
+			PlaybackSpeed(
+				playerViewModel = playerViewModel,
+				modifier = Modifier.align(Alignment.CenterEnd)
+			)
 		}
 	}
 }
@@ -375,5 +384,106 @@ fun SubscriptionsScreen(viewModel: MediaViewModel, modifier: Modifier = Modifier
 				}
 			}
 		}
+	}
+}
+/**
+ * Displays a button that triggers a bottom-attached popup to adjust playback speed.
+ * The slider changes speed in increments of 0.25x (ranging from 0.5x to 2.0x).
+ * Supports both portrait and landscape modes smoothly.
+ *
+ * @param playerViewModel the view model managing playback speed
+ * @param modifier modifier for the trigger button
+ */
+@Composable
+fun PlaybackSpeed(
+	playerViewModel: PlayerViewModel? = null,
+	modifier: Modifier = Modifier
+) {
+	var showPopUp by remember { mutableStateOf(false) }
+	val vmSpeed by (playerViewModel?.playbackSpeed?.collectAsState() ?: remember { mutableStateOf(null) })
+	var localSpeed by remember { mutableFloatStateOf(1.0f) }
+	val currentSpeed = vmSpeed ?: localSpeed
+
+	OutlinedButton(
+		onClick = { showPopUp = true },
+		modifier = modifier,
+		contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+	) {
+		Text(
+			text = formatPlaybackSpeed(currentSpeed),
+			style = MaterialTheme.typography.labelLarge
+		)
+	}
+
+	if (showPopUp) {
+		PlaybackSpeedBottomSheet(
+			currentSpeed = currentSpeed,
+			onSpeedChange = { newSpeed ->
+				localSpeed = newSpeed
+				playerViewModel?.setPlaybackSpeed(newSpeed)
+			},
+			onDismiss = { showPopUp = false }
+		)
+	}
+}
+/**
+ * Bottom-attached sheet containing a slider and quick-select presets for playback speed.
+ * Changes speed in increments of 0.25x and handles portrait/landscape orientations cleanly.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PlaybackSpeedBottomSheet(
+	currentSpeed: Float,
+	onSpeedChange: (Float) -> Unit,
+	onDismiss: () -> Unit,
+	modifier: Modifier = Modifier
+) {
+	val sheetState = rememberModalBottomSheetState()
+	val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+	ModalBottomSheet(
+		onDismissRequest = onDismiss,
+		sheetState = sheetState,
+		dragHandle = { BottomSheetDefaults.DragHandle() },
+		containerColor = MaterialTheme.colorScheme.surface,
+		contentColor = MaterialTheme.colorScheme.onSurface,
+		modifier = modifier
+	) {
+		Column(
+			modifier = Modifier
+				.fillMaxWidth()
+				.padding(horizontal = 24.dp)
+				.padding(bottom = if (isLandscape) 16.dp else 32.dp)
+				.verticalScroll(rememberScrollState()),
+			horizontalAlignment = Alignment.CenterHorizontally,
+			verticalArrangement = Arrangement.spacedBy(if (isLandscape) 8.dp else 16.dp)
+		) {
+			Text(
+				text = stringResource(R.string.playback_speed),
+				style = MaterialTheme.typography.titleMedium
+			)
+			Text(
+				text = formatPlaybackSpeed(currentSpeed),
+				style = MaterialTheme.typography.headlineMedium,
+				color = MaterialTheme.colorScheme.primary
+			)
+			Slider(
+				value = currentSpeed,
+				onValueChange = { raw ->
+					val snapped = round(raw / 0.25f) * 0.25f
+					onSpeedChange(snapped)
+				},
+				valueRange = 0.5f..2.0f,
+				steps = 5,
+				modifier = Modifier.fillMaxWidth(if (isLandscape) 0.6f else 1f)
+			)
+		}
+	}
+}
+private fun formatPlaybackSpeed(speed: Float): String {
+	return if (speed % 1f == 0f) {
+		"${speed.toInt()}x"
+	} else {
+		"${speed}x"
 	}
 }

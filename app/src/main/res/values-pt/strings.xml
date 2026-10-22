@@ -23,4 +23,5 @@
     <string name="pause">Pausar</string>
     <string name="skip_forward">Avançar 30 segundos</string>
     <string name="skip_back">Recuar 10 segundos</string>
+    <string name="playback_speed">Velocidade de reprodução</string>
 </resources>
