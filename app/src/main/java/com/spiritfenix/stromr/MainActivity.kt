@@ -54,7 +54,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     snackbarHost = { SnackbarHost(snackbarHostState) },
                     bottomBar = {
-                        NavigationBar {
+                        NavigationBar (containerColor = MaterialTheme.colorScheme.secondaryContainer){
 							NavigationBarItem(
 								selected = currentRoute == Routes.PLAYER,
 								onClick = {navController.navigate(Routes.PLAYER){

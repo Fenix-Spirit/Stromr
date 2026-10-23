@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -263,6 +264,7 @@ private fun PlayerArtwork(img: String, modifier: Modifier = Modifier) {
 		}
 	}
 }
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PlayerInfo(
 	title: String,
@@ -293,7 +295,19 @@ private fun PlayerInfo(
 			Slider(
 				value = position.toFloat(),
 				valueRange = 0f..duration.toFloat(),
-				onValueChange = { onSeek(it.toLong()) }
+				onValueChange = { onSeek(it.toLong()) },
+				track = { sliderState ->
+					SliderDefaults.Track(
+						sliderState = sliderState,
+						drawTick = { _, _ -> },
+						drawStopIndicator = null,
+						colors = SliderDefaults.colors(
+							thumbColor = MaterialTheme.colorScheme.primary,
+							activeTrackColor = MaterialTheme.colorScheme.primary,
+							inactiveTrackColor = MaterialTheme.colorScheme.primaryContainer
+						)
+					)
+				}
 			)
 		} else {
 			SkeletonBox(modifier = Modifier.height(14.dp).width(64.dp))
@@ -487,6 +501,12 @@ fun PlaybackSpeedBottomSheet(
 				},
 				valueRange = 0.5f..2.0f,
 				steps = 5,
+				colors = SliderDefaults.colors(
+					thumbColor = MaterialTheme.colorScheme.primary,
+					activeTrackColor = MaterialTheme.colorScheme.primary,
+					inactiveTrackColor = MaterialTheme.colorScheme.primaryContainer,
+					activeTickColor = MaterialTheme.colorScheme.primaryContainer
+				),
 				modifier = Modifier.fillMaxWidth(if (isLandscape) 0.6f else 1f)
 			)
 		}

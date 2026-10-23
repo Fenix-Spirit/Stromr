@@ -30,6 +30,7 @@ fun StrömrTheme(
 
             secondary = colorResource(R.color.ember_light),
             onSecondary = colorResource(R.color.black_900),
+			secondaryContainer = colorResource(R.color.ember_dark),
 
             outline = colorResource(R.color.black_700),
         )
