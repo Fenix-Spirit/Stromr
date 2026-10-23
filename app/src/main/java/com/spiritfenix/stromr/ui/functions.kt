@@ -23,6 +23,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -34,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.media3.common.C
+import coil3.compose.AsyncImage
 import com.spiritfenix.stromr.R
 import com.spiritfenix.stromr.data.MediaItem
 import kotlinx.coroutines.delay
@@ -204,7 +206,7 @@ fun PlayerScreen(
 			verticalAlignment = Alignment.CenterVertically,
 			horizontalArrangement = Arrangement.spacedBy(32.dp)
 		) {
-			PlayerArtwork(Modifier.fillMaxHeight().aspectRatio(1f, matchHeightConstraintsFirst = true))
+			PlayerArtwork(media.imageUrl,Modifier.fillMaxHeight().aspectRatio(1f, matchHeightConstraintsFirst = true))
 			PlayerInfo(media.title, position, duration, seek, isPlaying, playerViewModel::togglePlayPause, playerViewModel::skipBack, playerViewModel::skipForward, playerViewModel, Modifier.weight(1f))
 		}
 	} else {
@@ -213,7 +215,7 @@ fun PlayerScreen(
 			horizontalAlignment = Alignment.CenterHorizontally,
 			verticalArrangement = Arrangement.SpaceAround
 		) {
-			PlayerArtwork(Modifier.size(256.dp))
+			PlayerArtwork(media.imageUrl,Modifier.size(256.dp))
 			PlayerInfo(media.title, position, duration, seek, isPlaying, playerViewModel::togglePlayPause,playerViewModel::skipBack, playerViewModel::skipForward, playerViewModel, Modifier.fillMaxWidth())
 		}
 	}
@@ -237,18 +239,28 @@ private fun RequestNotificationPermissionOnce(trigger: Boolean) {
 	}
 }
 @Composable
-private fun PlayerArtwork(modifier: Modifier = Modifier) {
+private fun PlayerArtwork(img: String, modifier: Modifier = Modifier) {
 	Box(
 		modifier = modifier
 			.clip(RoundedCornerShape(16.dp))
 			.background(MaterialTheme.colorScheme.surfaceVariant),
 		contentAlignment = Alignment.Center
 	) {
-		Image(
-			modifier = Modifier.fillMaxSize(),
-			painter = painterResource(R.drawable.baseline_broken_image_24),
-			contentDescription = stringResource(R.string.default_image_description),
-		)
+		if (img!="") {
+			AsyncImage(
+				model = img,
+				contentDescription = stringResource(R.string.image_description),
+				contentScale = ContentScale.Crop,
+				modifier = Modifier.fillMaxSize()
+			)
+		}
+		else {
+			Image(
+				modifier = Modifier.fillMaxSize(),
+				painter = painterResource(R.drawable.baseline_broken_image_24),
+				contentDescription = stringResource(R.string.broken_image_description),
+			)
+		}
 	}
 }
 @Composable

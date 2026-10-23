@@ -7,7 +7,7 @@
     <string name="io_error">Episode/Track file not found</string>
     <string name="wrong_format_error">Unsupported audio format</string>
     <string name="default_error">"Playback error: "</string>
-    <string name="default_image_description">Missing cover</string>
+    <string name="broken_image_description">Missing cover</string>
     <string name="fetch_error">Couldn\'t reach the feed, check your connection</string>
     <string name="default_fetch_error">Something went wrong loading the feed</string>
     <string name="subscribe_error">Couldn\'t subscribe, check the URL and your connection</string>
@@ -24,4 +24,5 @@
     <string name="skip_forward">Skip forward 30 seconds</string>
     <string name="skip_back">Skip back 10 seconds</string>
     <string name="playback_speed">Playback speed</string>
+    <string name="image_description">Cover art</string>
 </resources>

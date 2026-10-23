@@ -7,7 +7,7 @@
     <string name="wrong_format_error">Formato de aúdio não suportado</string>
     <string name="default_error">"Erro ao reproduzir: "</string>
     <string name="server_error">Episódio/Música indisponível (erro de servidor)</string>
-    <string name="default_image_description">Imagem de capa em falta</string>
+    <string name="broken_image_description">Imagem de capa em falta</string>
     <string name="fetch_error">Não foi possível alcançar o conteúdo, verifique a sua ligação</string>
     <string name="default_fetch_error">Algo correu mal ao carregar o conteúdo</string>
     <string name="subscribe_error">Não foi possível efetuar a subscrição verifique o URL e a sua ligação à internet</string>
@@ -24,4 +24,5 @@
     <string name="skip_forward">Avançar 30 segundos</string>
     <string name="skip_back">Recuar 10 segundos</string>
     <string name="playback_speed">Velocidade de reprodução</string>
+    <string name="image_description">Imagem de capa</string>
 </resources>

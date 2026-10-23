@@ -25,6 +25,7 @@ object RssParser {
 		var insideItem = false
 		var currentEpisodeNumber = 0
 		var pubDate: Long = 0
+		var currentImageUrl = ""
 
 		var eventType = parser.eventType
 		while (eventType != XmlPullParser.END_DOCUMENT) {
@@ -41,6 +42,7 @@ object RssParser {
 							currentGuid = ""
 							currentEpisodeNumber = 0
 							pubDate = 0
+							currentImageUrl = ""
 						}
 						"title" -> {
 							val text = if (parser.next() == XmlPullParser.TEXT) parser.text else ""
@@ -71,6 +73,9 @@ object RssParser {
 								pubDate = parseRssDate(text)
 							}
 						}
+						"image" -> {
+							if (insideItem) currentImageUrl = parser.getAttributeValue(null,"href")
+						}
 					}
 				}
 				XmlPullParser.END_TAG -> {
@@ -82,7 +87,7 @@ object RssParser {
 								feedUrl = feedUrl,
 								title = currentTitle,
 								audioUrl = currentAudioUrl,
-								imageUrl = "",
+								imageUrl = currentImageUrl,
 								durationSec = currentDurationSec,
 								podcastTitle = podcastTitle,
 								description = currentDescription,
