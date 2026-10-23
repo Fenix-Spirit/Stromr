@@ -9,6 +9,6 @@ import androidx.room.Entity
 data class EpisodeProgressEntity(
 	val guid: String,
 	val feedUrl: String,
-	val positionMS: Long,
+	val positionMs: Long,
 	val updatedAt: Long,
 )
