@@ -1,5 +1,6 @@
 package com.spiritfenix.stromr.service
 
+import android.content.Intent
 import androidx.annotation.OptIn
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
@@ -49,4 +50,9 @@ class PlaybackService : MediaSessionService() {
         player.release()
         super.onDestroy()
     }
+
+	@OptIn(UnstableApi::class)
+	override fun onTaskRemoved(rootIntent: Intent?) {
+		pauseAllPlayersAndStopSelf()
+	}
 }
