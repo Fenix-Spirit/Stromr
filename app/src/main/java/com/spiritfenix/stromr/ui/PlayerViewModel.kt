@@ -4,6 +4,8 @@ import android.app.Application
 import android.content.ComponentName
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.media3.common.C
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
@@ -13,10 +15,16 @@ import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
 import com.spiritfenix.stromr.R
 import com.spiritfenix.stromr.data.MediaItem
+import com.spiritfenix.stromr.data.local.AppDatabase
+import com.spiritfenix.stromr.data.local.EpisodeProgressEntity
 import com.spiritfenix.stromr.service.PlaybackService
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 import androidx.media3.common.MediaItem as Media3Item
 
 /**
@@ -50,7 +58,23 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 		override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters) {
 			_playbackSpeed.value = playbackParameters.speed
 		}
+		override fun onIsPlayingChanged(isPlaying: Boolean) {
+			saveJob?.cancel()
+			if (isPlaying) {
+				saveJob = viewModelScope.launch {
+					while (true) {
+						delay(10_000.milliseconds)
+						saveProgress()
+					}
+				}
+			} else {
+				saveProgress()
+			}
+		}
 	}
+	private val progressDao = AppDatabase.getInstance(application).ProgressDao()
+	private var currentEpisode: MediaItem.Episode? = null
+	private var saveJob: Job? = null
 	init {
 		val sessionToken = SessionToken(
 			application,
@@ -88,7 +112,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 		}
 		val sameItem = c.currentMediaItem?.mediaId == item.id
 		val active = c.playbackState == Player.STATE_READY || c.playbackState == Player.STATE_BUFFERING
-		if (sameItem && active) return
+		if (sameItem && active) {
+			currentEpisode = item as? MediaItem.Episode
+			return
+		}
 		startPlayback(item)
 	}
 	fun togglePlayPause() {
@@ -112,6 +139,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 	 * @see play
 	 */
 	private fun startPlayback(item: MediaItem) {
+		saveProgress()
+		val episode = item as? MediaItem.Episode
+		currentEpisode = episode
 		val metadata = MediaMetadata.Builder()
 			.setTitle(item.title)
 			.setArtist(
@@ -122,10 +152,15 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 			)
 			.build()
 		val media3Item = Media3Item.Builder().setMediaId(item.id).setUri(item.audioUrl).setMediaMetadata(metadata).build()
-		controller?.apply {
-			setMediaItem(media3Item)
-			prepare()
-			play()
+		viewModelScope.launch {
+			val start = episode
+				?.let { progressDao.getPosition(it.feedUrl, it.id.removePrefix("${it.feedUrl}|")) }
+				?: 0L
+			controller?.apply {
+				setMediaItem(media3Item, start)
+				prepare()
+				play()
+			}
 		}
 	}
 	private fun updateIsPlaying() {
@@ -133,6 +168,22 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 		_isPlaying.value = c.playWhenReady &&
 			c.playbackState != Player.STATE_ENDED &&
 			c.playbackState != Player.STATE_IDLE
+	}
+	private fun saveProgress() {
+		val c = controller ?: return
+		val ep = currentEpisode ?: return
+		if (c.currentMediaItem?.mediaId != ep.id) return
+		if (c.playbackState != Player.STATE_READY && c.playbackState != Player.STATE_ENDED) return
+		val duration = c.duration
+		val raw = c.currentPosition
+		val pos = if (duration != C.TIME_UNSET && raw >= duration - 10_000) 0L else raw
+		val row = EpisodeProgressEntity(
+			guid = ep.id.removePrefix("${ep.feedUrl}|"),
+			feedUrl = ep.feedUrl,
+			positionMs = pos,
+			updatedAt = System.currentTimeMillis()
+		)
+		viewModelScope.launch { progressDao.save(row) }
 	}
 	fun setPlaybackSpeed(speed: Float){
 		_playbackSpeed.value = speed
