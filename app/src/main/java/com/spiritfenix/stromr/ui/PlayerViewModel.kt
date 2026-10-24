@@ -2,6 +2,7 @@ package com.spiritfenix.stromr.ui
 
 import android.app.Application
 import android.content.ComponentName
+import android.os.Bundle
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -27,6 +28,8 @@ import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
 import androidx.media3.common.MediaItem as Media3Item
 
+private const val KEY_FEED_URL = "feedUrl"
+private const val KEY_GUID = "guid"
 /**
  * ViewModel that controls playback via a [MediaController] connected to [PlaybackService].
  * @see MediaController
@@ -73,7 +76,6 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 		}
 	}
 	private val progressDao = AppDatabase.getInstance(application).ProgressDao()
-	private var currentEpisode: MediaItem.Episode? = null
 	private var saveJob: Job? = null
 	init {
 		val sessionToken = SessionToken(
@@ -112,10 +114,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 		}
 		val sameItem = c.currentMediaItem?.mediaId == item.id
 		val active = c.playbackState == Player.STATE_READY || c.playbackState == Player.STATE_BUFFERING
-		if (sameItem && active) {
-			currentEpisode = item as? MediaItem.Episode
-			return
-		}
+		if (sameItem && active) return
 		startPlayback(item)
 	}
 	fun togglePlayPause() {
@@ -140,22 +139,11 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 	 */
 	private fun startPlayback(item: MediaItem) {
 		saveProgress()
-		val episode = item as? MediaItem.Episode
-		currentEpisode = episode
-		val metadata = MediaMetadata.Builder()
-			.setTitle(item.title)
-			.setArtist(
-				when (item) {
-					is MediaItem.Episode -> item.podcastTitle
-					is MediaItem.Song -> item.artist
-				}
-			)
-			.build()
-		val media3Item = Media3Item.Builder().setMediaId(item.id).setUri(item.audioUrl).setMediaMetadata(metadata).build()
+		val media3Item = item.toMedia3Item()
 		viewModelScope.launch {
-			val start = episode
-				?.let { progressDao.getPosition(it.feedUrl, it.id.removePrefix("${it.feedUrl}|")) }
-				?: 0L
+			val start = (item as? MediaItem.Episode)?.let {
+				progressDao.getPosition(it.feedUrl, it.id.removePrefix("${it.feedUrl}|"))
+			} ?: 0L
 			controller?.apply {
 				setMediaItem(media3Item, start)
 				prepare()
@@ -171,18 +159,14 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 	}
 	private fun saveProgress() {
 		val c = controller ?: return
-		val ep = currentEpisode ?: return
-		if (c.currentMediaItem?.mediaId != ep.id) return
+		val extras = c.currentMediaItem?.mediaMetadata?.extras ?: return
+		val feedUrl = extras.getString(KEY_FEED_URL) ?: return
+		val guid = extras.getString(KEY_GUID) ?: return
 		if (c.playbackState != Player.STATE_READY && c.playbackState != Player.STATE_ENDED) return
 		val duration = c.duration
 		val raw = c.currentPosition
 		val pos = if (duration != C.TIME_UNSET && raw >= duration - 10_000) 0L else raw
-		val row = EpisodeProgressEntity(
-			guid = ep.id.removePrefix("${ep.feedUrl}|"),
-			feedUrl = ep.feedUrl,
-			positionMs = pos,
-			updatedAt = System.currentTimeMillis()
-		)
+		val row = EpisodeProgressEntity(feedUrl = feedUrl, guid = guid, positionMs = pos, updatedAt = System.currentTimeMillis())
 		viewModelScope.launch { progressDao.save(row) }
 	}
 	fun setPlaybackSpeed(speed: Float){
@@ -217,5 +201,27 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 			else ->
 				context.getString(R.string.default_error)+error.errorCodeName
 		}
+	}
+	private fun MediaItem.toMedia3Item(): Media3Item {
+		val extras = Bundle()
+		if (this is MediaItem.Episode) {
+			extras.putString(KEY_FEED_URL, feedUrl)
+			extras.putString(KEY_GUID, id.removePrefix("$feedUrl|"))
+		}
+		val metadata = MediaMetadata.Builder()
+			.setTitle(title)
+			.setArtist(
+				when (this) {
+					is MediaItem.Episode -> podcastTitle
+					is MediaItem.Song -> artist
+				}
+			)
+			.setExtras(extras)
+			.build()
+		return Media3Item.Builder()
+			.setMediaId(id)
+			.setUri(audioUrl)
+			.setMediaMetadata(metadata)
+			.build()
 	}
 }
