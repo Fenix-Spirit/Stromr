@@ -12,6 +12,10 @@ on:
           - patch
           - minor
           - major
+      release_info:
+        description: "What's new in this release"
+        required: true
+        type: string
 
 # Needed to push the version commit + tag and to create the release
 permissions:
@@ -96,8 +100,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VERSION: ${{ steps.bump.outputs.version }}
+          RELEASE_INFO: ${{ inputs.release_info }}
         run: |
           cp app/build/outputs/apk/release/app-release.apk "Stromr-v$VERSION.apk"
           gh release create "v$VERSION" "Stromr-v$VERSION.apk" \
             --title "Strömr v$VERSION" \
-            --generate-notes
+            --notes "$RELEASE_INFO"
