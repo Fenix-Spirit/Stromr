@@ -13,10 +13,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -40,6 +40,7 @@ import coil3.compose.AsyncImage
 import com.spiritfenix.stromr.R
 import com.spiritfenix.stromr.data.MediaItem
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.math.round
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -121,6 +122,7 @@ fun ListMediaScreen(
 	modifier: Modifier = Modifier,
 	filter: (MediaItem)-> Boolean,
 	onItemTap:(String)->Unit = {},
+	onAddToQueue: (String)->Unit = {},
 	viewModel: MediaViewModel
 ) {
 	val state by viewModel.uiState.collectAsState()
@@ -157,7 +159,9 @@ fun ListMediaScreen(
 				verticalArrangement = Arrangement.spacedBy(8.dp),
 			){
 				items(filteredItems, key={it.id}) { item ->
-					CardMedia(item=item,onTap = {onItemTap(item.id)})
+					SwipeToQueue(onAddToQueue = { onAddToQueue(item.id) }) {
+						CardMedia(item=item,onTap = {onItemTap(item.id)})
+					}
 				}
 			}
 		}
@@ -518,4 +522,38 @@ private fun formatPlaybackSpeed(speed: Float): String {
 	} else {
 		"${speed}x"
 	}
+}
+@Composable
+fun SwipeToQueue(
+	onAddToQueue: () -> Unit,
+	content: @Composable () -> Unit
+) {
+	val state = rememberSwipeToDismissBoxState()
+	val scope = rememberCoroutineScope()
+	val currentOnAdd by rememberUpdatedState(onAddToQueue)
+
+	SwipeToDismissBox(
+		state = state,
+		onDismiss = { value ->
+			if (value == SwipeToDismissBoxValue.StartToEnd) currentOnAdd()
+			scope.launch { state.reset() }
+		},
+		enableDismissFromEndToStart = false,
+		backgroundContent = {
+			Box(
+				modifier = Modifier
+					.fillMaxSize()
+					.clip(MaterialTheme.shapes.medium)
+					.background(MaterialTheme.colorScheme.primaryContainer)
+					.padding(horizontal = 20.dp),
+				contentAlignment = Alignment.CenterStart
+			) {
+				Icon(
+					Icons.AutoMirrored.Filled.PlaylistAdd,
+					contentDescription = stringResource(R.string.add_to_queue),
+					tint = MaterialTheme.colorScheme.onPrimaryContainer
+				)
+			}
+		}
+	) { content() }
 }

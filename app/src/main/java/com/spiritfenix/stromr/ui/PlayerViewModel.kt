@@ -32,6 +32,7 @@ import androidx.media3.common.MediaItem as Media3Item
 
 private const val KEY_FEED_URL = "feedUrl"
 private const val KEY_GUID = "guid"
+private const val KEY_QUEUED = "queued"
 /**
  * ViewModel that controls playback via a [MediaController] connected to [PlaybackService].
  * @see MediaController
@@ -161,7 +162,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 	private fun startPlayback(items: List<MediaItem>) {
 		saveProgress()
 		val first = items.first()
-		val media3Items = items.map { it.toMedia3Item() }
+		val media3Items = items.map { it.toMedia3Item(false) }
 		viewModelScope.launch {
 			val start = (first as? MediaItem.Episode)?.let {
 				progressDao.getPosition(it.feedUrl, it.id.removePrefix("${it.feedUrl}|"))
@@ -234,8 +235,11 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 				context.getString(R.string.default_error)+error.errorCodeName
 		}
 	}
-	private fun MediaItem.toMedia3Item(): Media3Item {
+	private fun MediaItem.toMedia3Item(queued: Boolean): Media3Item {
 		val extras = Bundle()
+		if (queued) {
+			extras.putBoolean(KEY_QUEUED, true)
+		}
 		if (this is MediaItem.Episode) {
 			extras.putString(KEY_FEED_URL, feedUrl)
 			extras.putString(KEY_GUID, id.removePrefix("$feedUrl|"))
@@ -255,5 +259,18 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 			.setUri(audioUrl)
 			.setMediaMetadata(metadata)
 			.build()
+	}
+	fun addToQueue(item: MediaItem) {
+		val c = controller ?: return
+		if (c.mediaItemCount == 0) {
+			play(listOf(item))
+			return
+		}
+		var index = c.currentMediaItemIndex + 1
+		while (index < c.mediaItemCount &&
+			c.getMediaItemAt(index).mediaMetadata.extras?.getBoolean(KEY_QUEUED) == true
+		) index++
+		c.addMediaItem(index, item.toMedia3Item(queued = true))
+		_errorMessage.value = getApplication<Application>().getString(R.string.added_to_queue)
 	}
 }

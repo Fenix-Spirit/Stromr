@@ -27,6 +27,9 @@ fun NavGraph(
 		playerViewModel.play(mediaViewModel.itemsFrom(id))
 		navController.navigate(Routes.PLAYER) { launchSingleTop = true }
 	}
+	val addToQueue: (String) -> Unit = { id ->
+		mediaViewModel.findById(id)?.let { playerViewModel.addToQueue(it) }
+	}
     NavHost(
         navController=navController,
         startDestination = Routes.EPISODE_LIST,
@@ -40,6 +43,7 @@ fun NavGraph(
             ListMediaScreen(
                 filter = { it is MediaItem.Episode },
                 onItemTap= openPlayer,
+                onAddToQueue = addToQueue,
                 viewModel=mediaViewModel
             )
         }
@@ -51,6 +55,7 @@ fun NavGraph(
             ListMediaScreen(
                 filter = { it is MediaItem.Song},
                 onItemTap= openPlayer,
+                onAddToQueue = addToQueue,
                 viewModel=mediaViewModel
             )
         }

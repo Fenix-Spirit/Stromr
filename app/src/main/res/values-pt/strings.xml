@@ -2,7 +2,7 @@
 <resources>
     <string name="song">Músicas</string>
     <string name="ep">Episódios</string>
-    <string name="network_error">Sem conexão á Internet</string>
+    <string name="network_error">Sem conexão à Internet</string>
     <string name="io_error">Ficheiro Episódio/Música não encontrado</string>
     <string name="wrong_format_error">Formato de aúdio não suportado</string>
     <string name="default_error">"Erro ao reproduzir: "</string>
@@ -25,4 +25,6 @@
     <string name="skip_back">Recuar 10 segundos</string>
     <string name="playback_speed">Velocidade de reprodução</string>
     <string name="image_description">Imagem de capa</string>
+    <string name="added_to_queue">Adicionado à fila com sucesso</string>
+    <string name="add_to_queue">Adicionar à fila</string>
 </resources>
