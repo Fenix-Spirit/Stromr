@@ -3,6 +3,7 @@ package com.spiritfenix.stromr.ui
 import android.app.Application
 import android.content.ComponentName
 import android.os.Bundle
+import androidx.annotation.OptIn
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,6 +12,7 @@ import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
@@ -38,7 +40,7 @@ private const val KEY_GUID = "guid"
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
 	private var controller: MediaController? = null
 	private var controllerFuture: ListenableFuture<MediaController>? = null
-	private var pendingItem: MediaItem? = null
+	private var pendingItems: List<MediaItem>? = null
 	val player: Player?
 		get() = controller
 	private val _errorMessage = MutableStateFlow<String?>(null)
@@ -55,6 +57,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 		}
 		override fun onMediaItemTransition(mediaItem: Media3Item?, reason: Int) {
 			_currentMediaId.value = mediaItem?.mediaId
+			if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO ||
+				reason == Player.MEDIA_ITEM_TRANSITION_REASON_SEEK) {
+				restorePosition(mediaItem)
+			}
 		}
 		override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) = updateIsPlaying()
 		override fun onPlaybackStateChanged(playbackState: Int) = updateIsPlaying()
@@ -74,6 +80,20 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 				saveProgress()
 			}
 		}
+		@OptIn(UnstableApi::class)
+		override fun onPositionDiscontinuity(
+			oldPosition: Player.PositionInfo,
+			newPosition: Player.PositionInfo,
+			reason: Int
+		) {
+			when (reason) {
+				Player.DISCONTINUITY_REASON_AUTO_TRANSITION ->
+					saveFor(oldPosition.mediaItem, 0L, C.TIME_UNSET)
+				Player.DISCONTINUITY_REASON_SEEK ->
+					if (oldPosition.mediaItem?.mediaId != newPosition.mediaItem?.mediaId)
+						saveFor(oldPosition.mediaItem, oldPosition.positionMs, C.TIME_UNSET)
+			}
+		}
 	}
 	private val progressDao = AppDatabase.getInstance(application).ProgressDao()
 	private var saveJob: Job? = null
@@ -90,9 +110,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 				_currentMediaId.value = controller?.currentMediaItem?.mediaId
 				_playbackSpeed.value = controller?.playbackParameters?.speed ?: 1f
 				updateIsPlaying()
-				pendingItem?.let { item ->
-					startPlayback(item)
-					pendingItem = null
+				pendingItems?.let { items ->
+					startPlayback(items)
+					pendingItems = null
 				}
 			},
 			ContextCompat.getMainExecutor(application)
@@ -105,17 +125,18 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 	 * @see MediaItem
 	 * @see startPlayback
 	 */
-	fun play(item: MediaItem) {
+	fun play(items: List<MediaItem>) {
+		val first = items.firstOrNull() ?: return
 		val c = controller
 		if (c == null) {
-			_currentMediaId.value = item.id
-			pendingItem = item
+			_currentMediaId.value = first.id
+			pendingItems = items
 			return
 		}
-		val sameItem = c.currentMediaItem?.mediaId == item.id
+		val sameItem = c.currentMediaItem?.mediaId == first.id
 		val active = c.playbackState == Player.STATE_READY || c.playbackState == Player.STATE_BUFFERING
 		if (sameItem && active) return
-		startPlayback(item)
+		startPlayback(items)
 	}
 	fun togglePlayPause() {
 		val c = controller ?: return
@@ -137,15 +158,16 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 	 * @see MediaItem
 	 * @see play
 	 */
-	private fun startPlayback(item: MediaItem) {
+	private fun startPlayback(items: List<MediaItem>) {
 		saveProgress()
-		val media3Item = item.toMedia3Item()
+		val first = items.first()
+		val media3Items = items.map { it.toMedia3Item() }
 		viewModelScope.launch {
-			val start = (item as? MediaItem.Episode)?.let {
+			val start = (first as? MediaItem.Episode)?.let {
 				progressDao.getPosition(it.feedUrl, it.id.removePrefix("${it.feedUrl}|"))
 			} ?: 0L
 			controller?.apply {
-				setMediaItem(media3Item, start)
+				setMediaItems(media3Items, 0,start)
 				prepare()
 				play()
 			}
@@ -159,15 +181,25 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 	}
 	private fun saveProgress() {
 		val c = controller ?: return
-		val extras = c.currentMediaItem?.mediaMetadata?.extras ?: return
+		if (c.playbackState != Player.STATE_READY && c.playbackState != Player.STATE_ENDED) return
+		saveFor(c.currentMediaItem, c.currentPosition, c.duration)
+	}
+	private fun saveFor(item: Media3Item?, positionMs: Long, durationMs: Long) {
+		val extras = item?.mediaMetadata?.extras ?: return
 		val feedUrl = extras.getString(KEY_FEED_URL) ?: return
 		val guid = extras.getString(KEY_GUID) ?: return
-		if (c.playbackState != Player.STATE_READY && c.playbackState != Player.STATE_ENDED) return
-		val duration = c.duration
-		val raw = c.currentPosition
-		val pos = if (duration != C.TIME_UNSET && raw >= duration - 10_000) 0L else raw
-		val row = EpisodeProgressEntity(feedUrl = feedUrl, guid = guid, positionMs = pos, updatedAt = System.currentTimeMillis())
+		val pos = if (durationMs != C.TIME_UNSET && positionMs >= durationMs - 10_000) 0L else positionMs
+		val row = EpisodeProgressEntity(guid = guid, feedUrl = feedUrl, positionMs = pos, updatedAt = System.currentTimeMillis())
 		viewModelScope.launch { progressDao.save(row) }
+	}
+	private fun restorePosition(item: Media3Item?) {
+		val extras = item?.mediaMetadata?.extras ?: return
+		val feedUrl = extras.getString(KEY_FEED_URL) ?: return
+		val guid = extras.getString(KEY_GUID) ?: return
+		viewModelScope.launch {
+			val pos = progressDao.getPosition(feedUrl, guid) ?: return@launch
+			if (controller?.currentMediaItem?.mediaId == item.mediaId) controller?.seekTo(pos)
+		}
 	}
 	fun setPlaybackSpeed(speed: Float){
 		_playbackSpeed.value = speed

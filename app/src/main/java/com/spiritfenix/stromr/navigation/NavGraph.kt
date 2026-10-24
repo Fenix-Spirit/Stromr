@@ -24,7 +24,7 @@ fun NavGraph(
     mediaViewModel: MediaViewModel
 ){
 	val openPlayer: (String) -> Unit = { id ->
-		mediaViewModel.findById(id)?.let { playerViewModel.play(it) }
+		playerViewModel.play(mediaViewModel.itemsFrom(id))
 		navController.navigate(Routes.PLAYER) { launchSingleTop = true }
 	}
     NavHost(
