@@ -27,4 +27,8 @@
     <string name="image_description">Imagem de capa</string>
     <string name="added_to_queue">Adicionado à fila com sucesso</string>
     <string name="add_to_queue">Adicionar à fila</string>
+    <string name="skip_next">Seguinte</string>
+    <string name="skip_previous">Anterior</string>
+    <string name="up_next">A seguir</string>
+    <string name="queue_empty">Nada a seguir</string>
 </resources>

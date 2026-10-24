@@ -7,14 +7,12 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.*
@@ -39,6 +37,7 @@ import androidx.media3.common.C
 import coil3.compose.AsyncImage
 import com.spiritfenix.stromr.R
 import com.spiritfenix.stromr.data.MediaItem
+import com.spiritfenix.stromr.data.UpNextEntry
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.round
@@ -61,7 +60,10 @@ fun CardMedia(item: MediaItem, onTap:()->Unit = {}){
 			verticalAlignment = Alignment.CenterVertically,
 			horizontalArrangement = Arrangement.spacedBy(12.dp))
 		{
-			Box(modifier = Modifier.size(48.dp).clip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) {
+			Box(modifier = Modifier
+				.size(48.dp)
+				.clip(RoundedCornerShape(8.dp))
+				.background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) {
 				val icon = when (item) {
 					is MediaItem.Episode -> "🎙"
 					is MediaItem.Song   -> "🎵"
@@ -130,7 +132,9 @@ fun ListMediaScreen(
 		is UiState.Loading -> {
 			LazyColumn (modifier = modifier.fillMaxSize(),contentPadding = PaddingValues(16.dp),verticalArrangement = Arrangement.spacedBy(8.dp)){
 				items (7){
-					SkeletonBox(modifier = Modifier.height(100.dp).fillMaxWidth(),cornerRadius = 8.dp)
+					SkeletonBox(modifier = Modifier
+						.height(100.dp)
+						.fillMaxWidth(),cornerRadius = 8.dp)
 				}
 			}
 		}
@@ -187,6 +191,10 @@ fun PlayerScreen(
 	val isPlaying by playerViewModel.isPlaying.collectAsState()
 	val uiState by mediaViewModel.uiState.collectAsState()
 	val media = (uiState as? UiState.Success)?.items?.find { it.id == mediaId }
+	var showQueue by remember { mutableStateOf(false) }
+	val hasNext by playerViewModel.hasNext.collectAsState()
+	val hasPrevious by playerViewModel.hasPrevious.collectAsState()
+	val upNext by playerViewModel.upNext.collectAsState()
 	if (media == null) {
 		Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
 			Text(stringResource(R.string.nothing_playing))
@@ -207,22 +215,61 @@ fun PlayerScreen(
 
 	if (landscape) {
 		Row(
-			modifier = Modifier.fillMaxSize().padding(24.dp),
+			modifier = Modifier
+				.fillMaxSize()
+				.padding(24.dp),
 			verticalAlignment = Alignment.CenterVertically,
 			horizontalArrangement = Arrangement.spacedBy(32.dp)
 		) {
-			PlayerArtwork(media.imageUrl,Modifier.fillMaxHeight().aspectRatio(1f, matchHeightConstraintsFirst = true))
-			PlayerInfo(media.title, position, duration, seek, isPlaying, playerViewModel::togglePlayPause, playerViewModel::skipBack, playerViewModel::skipForward, playerViewModel, Modifier.weight(1f))
+			PlayerArtwork(media.imageUrl,Modifier
+				.fillMaxHeight()
+				.aspectRatio(1f, matchHeightConstraintsFirst = true))
+			PlayerInfo(
+				media.title,
+				position,
+				duration,
+				seek,
+				isPlaying,
+				playerViewModel::togglePlayPause,
+				playerViewModel::skipBack,
+				playerViewModel::skipForward,
+				playerViewModel,
+				hasPrevious,
+				hasNext,
+				playerViewModel::previousItem,
+				playerViewModel::nextItem,
+				{ showQueue = true },
+				Modifier.weight(1f))
 		}
 	} else {
 		Column(
-			modifier = Modifier.fillMaxSize().padding(24.dp),
+			modifier = Modifier
+				.fillMaxSize()
+				.padding(24.dp),
 			horizontalAlignment = Alignment.CenterHorizontally,
 			verticalArrangement = Arrangement.SpaceAround
 		) {
 			PlayerArtwork(media.imageUrl,Modifier.size(256.dp))
-			PlayerInfo(media.title, position, duration, seek, isPlaying, playerViewModel::togglePlayPause,playerViewModel::skipBack, playerViewModel::skipForward, playerViewModel, Modifier.fillMaxWidth())
+			PlayerInfo(
+				media.title,
+				position,
+				duration,
+				seek,
+				isPlaying,
+				playerViewModel::togglePlayPause,
+				playerViewModel::skipBack,
+				playerViewModel::skipForward,
+				playerViewModel,
+				hasPrevious,
+				hasNext,
+				playerViewModel::previousItem,
+				playerViewModel::nextItem,
+				{ showQueue = true },
+				Modifier.fillMaxWidth())
 		}
+	}
+	if (showQueue) {
+		UpNextSheet(items = upNext, onJump = playerViewModel::jumpTo, onDismiss = { showQueue = false })
 	}
 }
 @Composable
@@ -280,16 +327,21 @@ private fun PlayerInfo(
 	onSkipBack: () -> Unit,
 	onSkipForward: () -> Unit,
 	playerViewModel: PlayerViewModel? = null,
+	hasPrevious: Boolean = false,
+	hasNext: Boolean = false,
+	onPrevious: () -> Unit = {},
+	onNext: () -> Unit = {},
+	onShowQueue: () -> Unit = {},
 	modifier: Modifier = Modifier
 ) {
 	Column(
 		modifier = modifier,
 		horizontalAlignment = Alignment.CenterHorizontally,
-		verticalArrangement = Arrangement.spacedBy(12.dp)
+		verticalArrangement = Arrangement.spacedBy(10.dp)
 	) {
 		Text(
 			text = "Playing item $title",
-			style = MaterialTheme.typography.headlineMedium,
+			style = MaterialTheme.typography.headlineSmall,
 			textAlign = TextAlign.Center,
 			maxLines = 2,
 			overflow = TextOverflow.Ellipsis
@@ -314,43 +366,47 @@ private fun PlayerInfo(
 				}
 			)
 		} else {
-			SkeletonBox(modifier = Modifier.height(14.dp).width(64.dp))
+			SkeletonBox(modifier = Modifier
+				.height(14.dp)
+				.width(64.dp))
 		}
-		Box(
+		Row(
 			modifier = Modifier.fillMaxWidth(),
-			contentAlignment = Alignment.Center
+			horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+			verticalAlignment = Alignment.CenterVertically
 		) {
-			Row(
-				modifier = Modifier.align(Alignment.Center),
-				verticalAlignment = Alignment.CenterVertically,
-				horizontalArrangement = Arrangement.spacedBy(16.dp)
-			) {
-				IconButton(onClick = onSkipBack, modifier = Modifier.size(48.dp)) {
-					Icon(
-						Icons.Default.Replay10,
-						contentDescription = stringResource(R.string.skip_back),
-						modifier = Modifier.size(32.dp)
-					)
-				}
-				FilledIconButton(onClick = onTogglePlayPause, modifier = Modifier.size(64.dp)) {
-					Icon(
-						imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-						contentDescription = stringResource(if (isPlaying) R.string.pause else R.string.play),
-						modifier = Modifier.size(36.dp)
-					)
-				}
-				IconButton(onClick = onSkipForward, modifier = Modifier.size(48.dp)) {
-					Icon(
-						Icons.Default.Forward30,
-						contentDescription = stringResource(R.string.skip_forward),
-						modifier = Modifier.size(32.dp)
-					)
-				}
+			IconButton(onClick = onPrevious, enabled = hasPrevious, modifier = Modifier.size(48.dp)) {
+				Icon(Icons.Default.SkipPrevious, contentDescription = stringResource(R.string.skip_previous), modifier = Modifier.size(32.dp))
 			}
-			PlaybackSpeed(
-				playerViewModel = playerViewModel,
-				modifier = Modifier.align(Alignment.CenterEnd)
-			)
+			IconButton(onClick = onSkipBack, modifier = Modifier.size(48.dp)) {
+				Icon(Icons.Default.Replay10, contentDescription = stringResource(R.string.skip_back), modifier = Modifier.size(32.dp))
+			}
+			FilledIconButton(onClick = onTogglePlayPause, modifier = Modifier.size(64.dp)) {
+				Icon(
+					imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+					contentDescription = stringResource(if (isPlaying) R.string.pause else R.string.play),
+					modifier = Modifier.size(36.dp)
+				)
+			}
+			IconButton(onClick = onSkipForward, modifier = Modifier.size(48.dp)) {
+				Icon(Icons.Default.Forward30, contentDescription = stringResource(R.string.skip_forward), modifier = Modifier.size(32.dp))
+			}
+			IconButton(onClick = onNext, enabled = hasNext, modifier = Modifier.size(48.dp)) {
+				Icon(Icons.Default.SkipNext, contentDescription = stringResource(R.string.skip_next), modifier = Modifier.size(32.dp))
+			}
+		}
+		Row(
+			modifier = Modifier.fillMaxWidth(),
+			horizontalArrangement = Arrangement.SpaceBetween,
+			verticalAlignment = Alignment.CenterVertically
+		) {
+			PlaybackSpeed(playerViewModel = playerViewModel)
+			OutlinedButton(
+				onClick = onShowQueue,
+				contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+			) {
+				Text(stringResource(R.string.up_next), style = MaterialTheme.typography.labelMedium)
+			}
 		}
 	}
 }
@@ -373,7 +429,9 @@ fun SkeletonBox(modifier: Modifier = Modifier,cornerRadius: Dp = 4.dp) {
 		label = "skeleton_alpha"
 	)
 	Box(
-		modifier = modifier.clip(RoundedCornerShape(cornerRadius)).background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha)),
+		modifier = modifier
+			.clip(RoundedCornerShape(cornerRadius))
+			.background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha)),
 	)
 }
 
@@ -384,7 +442,9 @@ fun SubscriptionsScreen(viewModel: MediaViewModel, modifier: Modifier = Modifier
 	var input by remember { mutableStateOf("") }
 
 	Column(
-		modifier = modifier.fillMaxSize().padding(16.dp),
+		modifier = modifier
+			.fillMaxSize()
+			.padding(16.dp),
 		verticalArrangement = Arrangement.spacedBy(12.dp)
 	) {
 		OutlinedTextField(
@@ -441,7 +501,7 @@ fun PlaybackSpeed(
 	) {
 		Text(
 			text = formatPlaybackSpeed(currentSpeed),
-			style = MaterialTheme.typography.labelLarge
+			style = MaterialTheme.typography.labelMedium
 		)
 	}
 
@@ -556,4 +616,52 @@ fun SwipeToQueue(
 			}
 		}
 	) { content() }
+}
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun UpNextSheet(
+	items: List<UpNextEntry>,
+	onJump: (Int) -> Unit,
+	onDismiss: () -> Unit
+) {
+	ModalBottomSheet(
+		onDismissRequest = onDismiss,
+		containerColor = MaterialTheme.colorScheme.surface,
+		contentColor = MaterialTheme.colorScheme.onSurface
+	) {
+		Text(
+			text = stringResource(R.string.up_next),
+			style = MaterialTheme.typography.titleMedium,
+			modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+		)
+		if (items.isEmpty()) {
+			Text(
+				text = stringResource(R.string.queue_empty),
+				color = MaterialTheme.colorScheme.onSurfaceVariant,
+				modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)
+			)
+		} else {
+			LazyColumn(contentPadding = PaddingValues(bottom = 32.dp)) {
+				itemsIndexed(items, key = { _, entry -> entry.index }) { i, entry ->
+					Column {
+						if (i > 0) {
+							HorizontalDivider(
+								modifier = Modifier.padding(horizontal = 24.dp),
+								color = MaterialTheme.colorScheme.outline
+							)
+						}
+						ListItem(
+							headlineContent = { Text(entry.title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+							supportingContent = { Text(entry.subtitle, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+							trailingContent = if (entry.queued) {
+								{ Icon(Icons.AutoMirrored.Filled.PlaylistAdd, contentDescription = stringResource(R.string.add_to_queue)) }
+							} else null,
+							colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surface),
+							modifier = Modifier.clickable { onJump(entry.index); onDismiss() }
+						)
+					}
+				}
+			}
+		}
+	}
 }

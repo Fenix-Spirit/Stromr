@@ -25,6 +25,10 @@
     <string name="skip_back">Skip back 10 seconds</string>
     <string name="playback_speed">Playback speed</string>
     <string name="image_description">Cover art</string>
-    <string name="added_to_queue">Sucessefully added to queue</string>
+    <string name="added_to_queue">Successfully added to queue</string>
     <string name="add_to_queue">Add to queue</string>
+    <string name="skip_next">Next</string>
+    <string name="skip_previous">Previous</string>
+    <string name="up_next">Up next</string>
+    <string name="queue_empty">Nothing up next</string>
 </resources>

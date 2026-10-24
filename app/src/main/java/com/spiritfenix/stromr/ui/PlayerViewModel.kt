@@ -7,17 +7,14 @@ import androidx.annotation.OptIn
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.media3.common.C
-import androidx.media3.common.MediaMetadata
-import androidx.media3.common.PlaybackException
-import androidx.media3.common.PlaybackParameters
-import androidx.media3.common.Player
+import androidx.media3.common.*
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.ListenableFuture
 import com.spiritfenix.stromr.R
 import com.spiritfenix.stromr.data.MediaItem
+import com.spiritfenix.stromr.data.UpNextEntry
 import com.spiritfenix.stromr.data.local.AppDatabase
 import com.spiritfenix.stromr.data.local.EpisodeProgressEntity
 import com.spiritfenix.stromr.service.PlaybackService
@@ -52,6 +49,12 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 	val isPlaying: StateFlow<Boolean> = _isPlaying.asStateFlow()
 	private val _playbackSpeed = MutableStateFlow(1f)
 	val playbackSpeed: StateFlow<Float> = _playbackSpeed.asStateFlow()
+	private val _upNext = MutableStateFlow<List<UpNextEntry>>(emptyList())
+	val upNext: StateFlow<List<UpNextEntry>> = _upNext.asStateFlow()
+	private val _hasNext = MutableStateFlow(false)
+	val hasNext: StateFlow<Boolean> = _hasNext.asStateFlow()
+	private val _hasPrevious = MutableStateFlow(false)
+	val hasPrevious: StateFlow<Boolean> = _hasPrevious.asStateFlow()
 	private val playerListener = object : Player.Listener {
 		override fun onPlayerError(error: PlaybackException) {
 			_errorMessage.value = friendlyMessage(error)
@@ -62,6 +65,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 				reason == Player.MEDIA_ITEM_TRANSITION_REASON_SEEK) {
 				restorePosition(mediaItem)
 			}
+			refreshQueue()
 		}
 		override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) = updateIsPlaying()
 		override fun onPlaybackStateChanged(playbackState: Int) = updateIsPlaying()
@@ -95,6 +99,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 						saveFor(oldPosition.mediaItem, oldPosition.positionMs, C.TIME_UNSET)
 			}
 		}
+		override fun onTimelineChanged(timeline: Timeline, reason: Int) = refreshQueue()
 	}
 	private val progressDao = AppDatabase.getInstance(application).ProgressDao()
 	private var saveJob: Job? = null
@@ -115,6 +120,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 					startPlayback(items)
 					pendingItems = null
 				}
+				refreshQueue()
 			},
 			ContextCompat.getMainExecutor(application)
 		)
@@ -273,4 +279,21 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 		c.addMediaItem(index, item.toMedia3Item(queued = true))
 		_errorMessage.value = getApplication<Application>().getString(R.string.added_to_queue)
 	}
+	private fun refreshQueue() {
+		val c = controller ?: return
+		_hasNext.value = c.hasNextMediaItem()
+		_hasPrevious.value = c.hasPreviousMediaItem()
+		_upNext.value = ((c.currentMediaItemIndex + 1) until c.mediaItemCount).map { i ->
+			val item = c.getMediaItemAt(i)
+			UpNextEntry(
+				index = i,
+				title = item.mediaMetadata.title?.toString().orEmpty(),
+				subtitle = item.mediaMetadata.artist?.toString().orEmpty(),
+				queued = item.mediaMetadata.extras?.getBoolean(KEY_QUEUED) == true
+			)
+		}
+	}
+	fun nextItem() { controller?.seekToNextMediaItem() }
+	fun previousItem() { controller?.seekToPreviousMediaItem() }
+	fun jumpTo(index: Int) { controller?.seekTo(index, 0L) }
 }
