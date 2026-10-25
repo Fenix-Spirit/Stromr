@@ -1,5 +1,6 @@
 package com.spiritfenix.stromr
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -16,7 +17,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -32,12 +35,33 @@ import com.spiritfenix.stromr.ui.UiState
 import com.spiritfenix.stromr.ui.theme.StrömrTheme
 
 class MainActivity : ComponentActivity() {
+	private var openPlayerRequest by mutableIntStateOf(0)
+	private fun handleIntent(intent: Intent?) {
+		if (intent?.action == ACTION_OPEN_PLAYER) openPlayerRequest++
+	}
+	override fun onNewIntent(intent: Intent) {
+		super.onNewIntent(intent)
+		setIntent(intent)
+		handleIntent(intent)
+	}
+	companion object {
+		const val ACTION_OPEN_PLAYER = "com.spiritfenix.stromr.OPEN_PLAYER"
+	}
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+		if (savedInstanceState == null) handleIntent(intent)
         enableEdgeToEdge()
         setContent {
             StrömrTheme {
                 val navController = rememberNavController()
+				LaunchedEffect(openPlayerRequest) {
+					if (openPlayerRequest > 0) {
+						navController.navigate(Routes.PLAYER) {
+							launchSingleTop = true
+							popUpTo(Routes.PLAYER)
+						}
+					}
+				}
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
                 val mediaViewModel: MediaViewModel = viewModel()
