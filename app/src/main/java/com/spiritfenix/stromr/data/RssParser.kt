@@ -46,7 +46,8 @@ object RssParser {
 						}
 						"title" -> {
 							val text = if (parser.next() == XmlPullParser.TEXT) parser.text else ""
-							if (insideItem) currentTitle = text else podcastTitle = text
+							if (insideItem) currentTitle = text
+							else if (podcastTitle.isEmpty()) podcastTitle = text
 						}
 						"enclosure" -> {
 							currentAudioUrl = parser.getAttributeValue(null, "url") ?: ""
