@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -21,8 +22,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.spiritfenix.stromr.data.MediaItem
 import com.spiritfenix.stromr.navigation.NavGraph
 import com.spiritfenix.stromr.navigation.Routes
+import com.spiritfenix.stromr.ui.MiniPlayer
 import com.spiritfenix.stromr.ui.MediaViewModel
 import com.spiritfenix.stromr.ui.PlayerViewModel
 import com.spiritfenix.stromr.ui.UiState
@@ -42,6 +45,11 @@ class MainActivity : ComponentActivity() {
                 val snackbarHostState = remember { SnackbarHostState() }
                 val errorMessagePlay by playerViewModel.errorMessage.collectAsState()
                 val messageLoad by mediaViewModel.uiState.collectAsState()
+				val currentMediaId by playerViewModel.currentMediaId.collectAsState()
+				val isPlaying by playerViewModel.isPlaying.collectAsState()
+				val nowPlaying = remember(currentMediaId, messageLoad) {
+					(messageLoad as? UiState.Success)?.items?.find { it.id == currentMediaId }
+				}
                 val errorMessageLoad = (messageLoad as? UiState.Error)?.message
                 val errorMessage = errorMessagePlay ?: errorMessageLoad
                 LaunchedEffect(errorMessage) {
@@ -54,74 +62,94 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     snackbarHost = { SnackbarHost(snackbarHostState) },
                     bottomBar = {
-                        NavigationBar (containerColor = MaterialTheme.colorScheme.secondaryContainer){
-							NavigationBarItem(
-								selected = currentRoute == Routes.PLAYER,
-								onClick = {navController.navigate(Routes.PLAYER){
-									launchSingleTop = true
-									popUpTo(Routes.PLAYER)
-								}},
-								icon = { Icon(Icons.Default.PlayArrow, contentDescription = stringResource(R.string.player)) },
-								label = { Text(stringResource(R.string.player)) },
-								colors = NavigationBarItemDefaults.colors(
-									selectedIconColor = MaterialTheme.colorScheme.primary,
-									selectedTextColor = MaterialTheme.colorScheme.primary,
-									indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-									unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-									unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+						Column {
+							if (nowPlaying != null && currentRoute != Routes.PLAYER) {
+								MiniPlayer(
+									title = nowPlaying.title,
+									subtitle = when (nowPlaying) {
+										is MediaItem.Episode -> nowPlaying.podcastTitle
+										is MediaItem.Song -> nowPlaying.artist
+									},
+									img = nowPlaying.imageUrl,
+									isPlaying = isPlaying,
+									onTogglePlayPause = playerViewModel::togglePlayPause,
+									onClick = {
+										navController.navigate(Routes.PLAYER) {
+											launchSingleTop = true
+											popUpTo(Routes.PLAYER)
+										}
+									}
 								)
-							)
-							NavigationBarItem(
-								selected = currentRoute == Routes.SUBSCRIPTIONS,
-								onClick = {navController.navigate(Routes.SUBSCRIPTIONS){
-									launchSingleTop = true
-									popUpTo(Routes.SUBSCRIPTIONS)
-								}},
-								icon = { Icon(Icons.Default.Subscriptions, contentDescription = stringResource(R.string.subscriptions)) },
-								label = { Text(stringResource(R.string.subscriptions)) },
-								colors = NavigationBarItemDefaults.colors(
-									selectedIconColor = MaterialTheme.colorScheme.primary,
-									selectedTextColor = MaterialTheme.colorScheme.primary,
-									indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-									unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-									unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+							}
+							NavigationBar (containerColor = MaterialTheme.colorScheme.secondaryContainer){
+								NavigationBarItem(
+									selected = currentRoute == Routes.PLAYER,
+									onClick = {navController.navigate(Routes.PLAYER){
+										launchSingleTop = true
+										popUpTo(Routes.PLAYER)
+									}},
+									icon = { Icon(Icons.Default.PlayArrow, contentDescription = stringResource(R.string.player)) },
+									label = { Text(stringResource(R.string.player)) },
+									colors = NavigationBarItemDefaults.colors(
+										selectedIconColor = MaterialTheme.colorScheme.primary,
+										selectedTextColor = MaterialTheme.colorScheme.primary,
+										indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+										unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+										unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+									)
 								)
-							)
-                            NavigationBarItem(
-                                selected = currentRoute == Routes.EPISODE_LIST,
-                                onClick = { navController.navigate(Routes.EPISODE_LIST){
-                                    launchSingleTop = true
-                                    popUpTo(Routes.EPISODE_LIST){inclusive = false}
-                                    }
-                                },
-                                icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = stringResource(R.string.ep)) },
-                                label = { Text(stringResource(R.string.ep)) },
-                                colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            )
-                            NavigationBarItem(
-                                selected = currentRoute == Routes.SONG_LIST,
-                                onClick = { navController.navigate(Routes.SONG_LIST){
-                                    launchSingleTop = true
-                                    popUpTo(Routes.SONG_LIST){inclusive = false}
-                                    }
-                                },
-                                icon = { Icon(Icons.Default.MusicNote, contentDescription = stringResource(R.string.song)) },
-                                label = { Text(stringResource(R.string.song)) },
-                                colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            )
-                        }
+								NavigationBarItem(
+									selected = currentRoute == Routes.SUBSCRIPTIONS,
+									onClick = {navController.navigate(Routes.SUBSCRIPTIONS){
+										launchSingleTop = true
+										popUpTo(Routes.SUBSCRIPTIONS)
+									}},
+									icon = { Icon(Icons.Default.Subscriptions, contentDescription = stringResource(R.string.subscriptions)) },
+									label = { Text(stringResource(R.string.subscriptions)) },
+									colors = NavigationBarItemDefaults.colors(
+										selectedIconColor = MaterialTheme.colorScheme.primary,
+										selectedTextColor = MaterialTheme.colorScheme.primary,
+										indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+										unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+										unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+									)
+								)
+								NavigationBarItem(
+									selected = currentRoute == Routes.EPISODE_LIST,
+									onClick = { navController.navigate(Routes.EPISODE_LIST){
+										launchSingleTop = true
+										popUpTo(Routes.EPISODE_LIST){inclusive = false}
+									}
+									},
+									icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = stringResource(R.string.ep)) },
+									label = { Text(stringResource(R.string.ep)) },
+									colors = NavigationBarItemDefaults.colors(
+										selectedIconColor = MaterialTheme.colorScheme.primary,
+										selectedTextColor = MaterialTheme.colorScheme.primary,
+										indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+										unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+										unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+									)
+								)
+								NavigationBarItem(
+									selected = currentRoute == Routes.SONG_LIST,
+									onClick = { navController.navigate(Routes.SONG_LIST){
+										launchSingleTop = true
+										popUpTo(Routes.SONG_LIST){inclusive = false}
+									}
+									},
+									icon = { Icon(Icons.Default.MusicNote, contentDescription = stringResource(R.string.song)) },
+									label = { Text(stringResource(R.string.song)) },
+									colors = NavigationBarItemDefaults.colors(
+										selectedIconColor = MaterialTheme.colorScheme.primary,
+										selectedTextColor = MaterialTheme.colorScheme.primary,
+										indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+										unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+										unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+									)
+								)
+							}
+						}
                     }
                 ) { innerPadding ->
                     NavGraph(

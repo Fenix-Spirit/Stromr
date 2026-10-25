@@ -665,3 +665,60 @@ fun UpNextSheet(
 		}
 	}
 }
+@Composable
+fun MiniPlayer(
+	title: String,
+	subtitle: String,
+	img: String,
+	isPlaying: Boolean,
+	onTogglePlayPause: () -> Unit,
+	onClick: () -> Unit,
+	modifier: Modifier = Modifier
+) {
+	Surface(
+		color = MaterialTheme.colorScheme.surfaceVariant,
+		modifier = modifier.fillMaxWidth().clickable(onClick = onClick)
+	) {
+		Row(
+			modifier = Modifier.padding(start = 8.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
+			verticalAlignment = Alignment.CenterVertically
+		) {
+			if (img.isNotEmpty()) {
+				AsyncImage(
+					model = img,
+					contentDescription = stringResource(R.string.image_description),
+					modifier = Modifier.size(48.dp).clip(RoundedCornerShape(4.dp))
+				)
+			}
+			else{
+				Image(
+					modifier = Modifier.size(48.dp).clip(RoundedCornerShape(4.dp)),
+					painter = painterResource(R.drawable.baseline_broken_image_24),
+					contentDescription = stringResource(R.string.broken_image_description),
+				)
+			}
+			Spacer(modifier = Modifier.width(8.dp))
+			Column(modifier = Modifier.weight(1f)) {
+				Text(
+					text = title,
+					style = MaterialTheme.typography.titleSmall,
+					maxLines = 1,
+					overflow = TextOverflow.Ellipsis
+				)
+				Text(
+					text = subtitle,
+					style = MaterialTheme.typography.bodySmall,
+					color = MaterialTheme.colorScheme.onSurfaceVariant,
+					maxLines = 1,
+					overflow = TextOverflow.Ellipsis
+				)
+			}
+			IconButton(onClick = onTogglePlayPause) {
+				Icon(
+					imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+					contentDescription = stringResource(if (isPlaying) R.string.pause else R.string.play)
+				)
+			}
+		}
+	}
+}
