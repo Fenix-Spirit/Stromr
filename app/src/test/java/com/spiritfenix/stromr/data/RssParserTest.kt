@@ -160,4 +160,15 @@ class RssParserTest {
 	fun `pubDate with numeric offset is parsed`() {
 		assertEquals(1716129000000L, pubDateOf("Sun, 19 May 2024 15:30:00 +0100"))
 	}
+	@Test
+	fun `channel image title does not overwrite podcast title`() {
+		val feed = """
+        <rss><channel>
+          <title>Real Title</title>
+          <image><title>Image Title</title><url>https://example.com/i.png</url></image>
+          <item><title>E</title><guid>1</guid><enclosure url="https://example.com/a.mp3" /></item>
+        </channel></rss>
+    """.trimIndent()
+		assertEquals("Real Title", RssParser.parse(feed, "https://example.com/feed")[0].podcastTitle)
+	}
 }
