@@ -24,6 +24,13 @@ class MediaViewModel(application: Application): AndroidViewModel(application) {
 	private var hasAttemptedRefresh = false
 	private val _subscribeError = MutableStateFlow<String?>(null)
 	val subscribeError: StateFlow<String?> = _subscribeError.asStateFlow()
+	val feedTitles: StateFlow<Map<String, String>> = repository.episodes.
+		map { episodes ->
+			episodes.
+				filter { it.podcastTitle.isNotEmpty() }
+				.associate { it.feedUrl to it.podcastTitle }
+		}
+		.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
 	init {
 		viewModelScope.launch {

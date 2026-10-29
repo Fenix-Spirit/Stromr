@@ -439,6 +439,7 @@ fun SkeletonBox(modifier: Modifier = Modifier,cornerRadius: Dp = 4.dp) {
 @Composable
 fun SubscriptionsScreen(viewModel: MediaViewModel, modifier: Modifier = Modifier) {
 	val feeds by viewModel.subscribedFeeds.collectAsState()
+	val titles by viewModel.feedTitles.collectAsState()
 	val error by viewModel.subscribeError.collectAsState()
 	var input by remember { mutableStateOf("") }
 
@@ -464,11 +465,12 @@ fun SubscriptionsScreen(viewModel: MediaViewModel, modifier: Modifier = Modifier
 
 		LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
 			items(feeds.toList(), key = { it }) { url ->
+				val title = titles[url]
 				Row(
 					modifier = Modifier.fillMaxWidth(),
 					verticalAlignment = Alignment.CenterVertically
 				) {
-					Text(url, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+					Text(title ?: url, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
 					IconButton(onClick = { viewModel.unsubscribe(url) }) {
 						Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.unsubscribe))
 					}
