@@ -1,13 +1,7 @@
 package com.spiritfenix.stromr.network
 
 import android.content.Context
-import androidx.work.Constraints
-import androidx.work.CoroutineWorker
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
-import androidx.work.WorkerParameters
+import androidx.work.*
 import com.spiritfenix.stromr.data.PodcastRepository
 import com.spiritfenix.stromr.data.SubscriptionStore
 import com.spiritfenix.stromr.data.local.AppDatabase

@@ -31,4 +31,8 @@
     <string name="skip_previous">Anterior</string>
     <string name="up_next">A seguir</string>
     <string name="queue_empty">Nada a seguir</string>
+    <string name="settings">Definições</string>
+    <string name="feed_refresh">Atualização automática do Feed</string>
+    <string name="wifi_only">Apenas quando há WiFi disponível</string>
+    <string name="refresh_interval">Intervalo de atualização</string>
 </resources>

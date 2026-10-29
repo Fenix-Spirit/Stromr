@@ -12,24 +12,21 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Subscriptions
 import androidx.compose.material3.*
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.spiritfenix.stromr.data.MediaItem
+import com.spiritfenix.stromr.data.SettingsStore
 import com.spiritfenix.stromr.navigation.NavGraph
 import com.spiritfenix.stromr.navigation.Routes
-import com.spiritfenix.stromr.ui.MiniPlayer
 import com.spiritfenix.stromr.ui.MediaViewModel
+import com.spiritfenix.stromr.ui.MiniPlayer
 import com.spiritfenix.stromr.ui.PlayerViewModel
 import com.spiritfenix.stromr.ui.UiState
 import com.spiritfenix.stromr.ui.theme.StrömrTheme
@@ -54,6 +51,7 @@ class MainActivity : ComponentActivity() {
 		setContent {
 			StrömrTheme {
 				val navController = rememberNavController()
+				val settings = SettingsStore(this)
 				LaunchedEffect(openPlayerRequest) {
 					if (openPlayerRequest > 0) {
 						navController.navigate(Routes.PLAYER) {
@@ -172,6 +170,24 @@ class MainActivity : ComponentActivity() {
 										unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
 									)
 								)
+								NavigationBarItem(
+									selected = currentRoute== Routes.SETTINGS,
+									onClick = {
+										navController.navigate(Routes.SETTINGS){
+											launchSingleTop = true
+											popUpTo(Routes.SETTINGS){inclusive = false}
+										}
+									},
+									icon = {Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings))},
+									label = { Text(stringResource(R.string.settings)) },
+									colors = NavigationBarItemDefaults.colors(
+										selectedIconColor = MaterialTheme.colorScheme.primary,
+										selectedTextColor = MaterialTheme.colorScheme.primary,
+										indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+										unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+										unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+									)
+								)
 							}
 						}
 					}
@@ -180,6 +196,7 @@ class MainActivity : ComponentActivity() {
 						navController = navController,
 						mediaViewModel=mediaViewModel,
 						playerViewModel=playerViewModel,
+						settings=settings,
 						modifier = Modifier.padding(innerPadding)
 					)
 				}

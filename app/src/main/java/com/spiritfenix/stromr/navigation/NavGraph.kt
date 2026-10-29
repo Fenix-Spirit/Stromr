@@ -10,6 +10,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.spiritfenix.stromr.data.MediaItem
+import com.spiritfenix.stromr.data.SettingsStore
 import com.spiritfenix.stromr.ui.*
 
 /**
@@ -18,10 +19,11 @@ import com.spiritfenix.stromr.ui.*
  */
 @Composable
 fun NavGraph(
-    navController: NavHostController,
-    modifier: Modifier = Modifier,
-    playerViewModel: PlayerViewModel,
-    mediaViewModel: MediaViewModel
+	navController: NavHostController,
+	modifier: Modifier = Modifier,
+	playerViewModel: PlayerViewModel,
+	settings: SettingsStore,
+	mediaViewModel: MediaViewModel
 ){
 	val openPlayer: (String) -> Unit = { id ->
 		playerViewModel.play(mediaViewModel.itemsFrom(id))
@@ -30,42 +32,42 @@ fun NavGraph(
 	val addToQueue: (String) -> Unit = { id ->
 		mediaViewModel.findById(id)?.let { playerViewModel.addToQueue(it) }
 	}
-    NavHost(
-        navController=navController,
-        startDestination = Routes.EPISODE_LIST,
-        modifier = modifier
-    ){
-        composable(
-            Routes.EPISODE_LIST,
-            enterTransition = { slideInHorizontally(animationSpec = tween(200)) },
-            exitTransition = {fadeOut(animationSpec = tween(100))}
-        ){
-            ListMediaScreen(
-                filter = { it is MediaItem.Episode },
-                onItemTap= openPlayer,
-                onAddToQueue = addToQueue,
-                viewModel=mediaViewModel
-            )
-        }
-        composable(
-            Routes.SONG_LIST,
-            enterTransition = { slideInHorizontally(animationSpec = tween(200)){it} },
-            exitTransition = {fadeOut(animationSpec = tween(100))}
-        ){
-            ListMediaScreen(
-                filter = { it is MediaItem.Song},
-                onItemTap= openPlayer,
-                onAddToQueue = addToQueue,
-                viewModel=mediaViewModel
-            )
-        }
-        composable(
-            route = Routes.PLAYER,
-            enterTransition = { slideInVertically(animationSpec = tween(200)){it} },
-            exitTransition = { fadeOut(animationSpec = tween(100)) }
-        ){
-            PlayerScreen(playerViewModel=playerViewModel,mediaViewModel=mediaViewModel)
-        }
+	NavHost(
+		navController=navController,
+		startDestination = Routes.EPISODE_LIST,
+		modifier = modifier
+	){
+		composable(
+			Routes.EPISODE_LIST,
+			enterTransition = { slideInHorizontally(animationSpec = tween(200)) },
+			exitTransition = {fadeOut(animationSpec = tween(100))}
+		){
+			ListMediaScreen(
+				filter = { it is MediaItem.Episode },
+				onItemTap= openPlayer,
+				onAddToQueue = addToQueue,
+				viewModel=mediaViewModel
+			)
+		}
+		composable(
+			Routes.SONG_LIST,
+			enterTransition = { slideInHorizontally(animationSpec = tween(200)){it} },
+			exitTransition = {fadeOut(animationSpec = tween(100))}
+		){
+			ListMediaScreen(
+				filter = { it is MediaItem.Song},
+				onItemTap= openPlayer,
+				onAddToQueue = addToQueue,
+				viewModel=mediaViewModel
+			)
+		}
+		composable(
+			route = Routes.PLAYER,
+			enterTransition = { slideInVertically(animationSpec = tween(200)){it} },
+			exitTransition = { fadeOut(animationSpec = tween(100)) }
+		){
+			PlayerScreen(playerViewModel=playerViewModel,mediaViewModel=mediaViewModel)
+		}
 		composable(
 			route = Routes.SUBSCRIPTIONS,
 			enterTransition = { slideInVertically(animationSpec = tween(200)){it} },
@@ -73,5 +75,12 @@ fun NavGraph(
 		){
 			SubscriptionsScreen(mediaViewModel)
 		}
-    }
+		composable(
+			route = Routes.SETTINGS,
+			enterTransition = { slideInVertically(animationSpec = tween(200)){it} },
+			exitTransition = {fadeOut(animationSpec = tween(100))}
+		){
+			SettingsScreen(settings)
+		}
+	}
 }

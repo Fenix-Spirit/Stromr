@@ -37,6 +37,7 @@ import androidx.media3.common.C
 import coil3.compose.AsyncImage
 import com.spiritfenix.stromr.R
 import com.spiritfenix.stromr.data.MediaItem
+import com.spiritfenix.stromr.data.SettingsStore
 import com.spiritfenix.stromr.data.UpNextEntry
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -718,6 +719,97 @@ fun MiniPlayer(
 					imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
 					contentDescription = stringResource(if (isPlaying) R.string.pause else R.string.play)
 				)
+			}
+		}
+	}
+}
+@Composable
+fun SettingsScreen(settings: SettingsStore, modifier: Modifier = Modifier) {
+	val scope = rememberCoroutineScope()
+	val wifiOnly by settings.wifiOnly.collectAsState(initial = false)
+	val refreshInterval by settings.refreshInterval.collectAsState(initial = 6)
+	val options = listOf(1, 3, 6, 12, 24)
+	var expanded by remember { mutableStateOf(false) }
+
+	Column(
+		modifier = modifier
+			.fillMaxSize()
+			.verticalScroll(rememberScrollState()),
+	) {
+		Text(
+			text = stringResource(R.string.settings),
+			style = MaterialTheme.typography.titleLarge,
+			modifier = Modifier.padding(16.dp)
+		)
+		HorizontalDivider()
+		Text(
+			text = stringResource(R.string.feed_refresh),
+			style = MaterialTheme.typography.titleMedium,
+			modifier = Modifier.padding(16.dp)
+		)
+		Row(
+			modifier = Modifier
+				.fillMaxWidth()
+				.padding(16.dp),
+			verticalAlignment = Alignment.CenterVertically,
+			horizontalArrangement = Arrangement.SpaceBetween
+		) {
+			Text(
+				text = stringResource(R.string.wifi_only),
+				style = MaterialTheme.typography.bodyMedium,
+				modifier = Modifier
+					.weight(1f)
+					.padding(end = 16.dp)
+			)
+			Switch(
+				checked = wifiOnly,
+				onCheckedChange = {
+					scope.launch {
+						settings.setWifiOnly(it)
+					}
+				}
+			)
+		}
+		Row(
+			modifier = Modifier
+				.fillMaxWidth()
+				.padding(16.dp),
+			verticalAlignment = Alignment.CenterVertically,
+			horizontalArrangement = Arrangement.SpaceBetween
+		) {
+			Text(
+				text = stringResource(R.string.refresh_interval),
+				style = MaterialTheme.typography.bodyMedium,
+				modifier = Modifier
+					.weight(1f)
+					.padding(end = 16.dp)
+			)
+			Box {
+				OutlinedButton(
+					onClick = { expanded = true },
+					contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+				) {
+					Text(
+						text = "${refreshInterval}h",
+						style = MaterialTheme.typography.labelMedium
+					)
+				}
+				DropdownMenu(
+					expanded = expanded,
+					onDismissRequest = { expanded = false },
+				) {
+					options.forEach { option ->
+						DropdownMenuItem(
+							text = { Text(text = "${option}h") },
+							onClick = {
+								scope.launch {
+									settings.setRefreshInterval(option)
+								}
+								expanded = false
+							}
+						)
+					}
+				}
 			}
 		}
 	}

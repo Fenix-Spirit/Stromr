@@ -31,4 +31,8 @@
     <string name="skip_previous">Previous</string>
     <string name="up_next">Up next</string>
     <string name="queue_empty">Nothing up next</string>
+    <string name="settings">Settings</string>
+    <string name="feed_refresh">Automatic feed refresh</string>
+    <string name="wifi_only">Use only when WiFi is available</string>
+    <string name="refresh_interval">Refresh interval</string>
 </resources>

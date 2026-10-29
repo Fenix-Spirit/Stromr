@@ -12,5 +12,5 @@ object Routes {
     const val SONG_LIST = "song_list"
     const val PLAYER = "player"
 	const val SUBSCRIPTIONS = "subscriptions"
-
+	const val SETTINGS = "settings"
 }
