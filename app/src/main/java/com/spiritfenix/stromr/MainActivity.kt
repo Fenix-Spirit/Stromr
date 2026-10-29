@@ -47,13 +47,13 @@ class MainActivity : ComponentActivity() {
 	companion object {
 		const val ACTION_OPEN_PLAYER = "com.spiritfenix.stromr.OPEN_PLAYER"
 	}
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+	override fun onCreate(savedInstanceState: Bundle?) {
+		super.onCreate(savedInstanceState)
 		if (savedInstanceState == null) handleIntent(intent)
-        enableEdgeToEdge()
-        setContent {
-            StrömrTheme {
-                val navController = rememberNavController()
+		enableEdgeToEdge()
+		setContent {
+			StrömrTheme {
+				val navController = rememberNavController()
 				LaunchedEffect(openPlayerRequest) {
 					if (openPlayerRequest > 0) {
 						navController.navigate(Routes.PLAYER) {
@@ -62,30 +62,30 @@ class MainActivity : ComponentActivity() {
 						}
 					}
 				}
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentRoute = navBackStackEntry?.destination?.route
-                val mediaViewModel: MediaViewModel = viewModel()
-                val playerViewModel: PlayerViewModel = viewModel()
-                val snackbarHostState = remember { SnackbarHostState() }
-                val errorMessagePlay by playerViewModel.errorMessage.collectAsState()
-                val messageLoad by mediaViewModel.uiState.collectAsState()
+				val navBackStackEntry by navController.currentBackStackEntryAsState()
+				val currentRoute = navBackStackEntry?.destination?.route
+				val mediaViewModel: MediaViewModel = viewModel()
+				val playerViewModel: PlayerViewModel = viewModel()
+				val snackbarHostState = remember { SnackbarHostState() }
+				val errorMessagePlay by playerViewModel.errorMessage.collectAsState()
+				val messageLoad by mediaViewModel.uiState.collectAsState()
 				val currentMediaId by playerViewModel.currentMediaId.collectAsState()
 				val isPlaying by playerViewModel.isPlaying.collectAsState()
 				val nowPlaying = remember(currentMediaId, messageLoad) {
 					(messageLoad as? UiState.Success)?.items?.find { it.id == currentMediaId }
 				}
-                val errorMessageLoad = (messageLoad as? UiState.Error)?.message
-                val errorMessage = errorMessagePlay ?: errorMessageLoad
-                LaunchedEffect(errorMessage) {
-                    errorMessage?.let {
-                        snackbarHostState.showSnackbar(it)
-                        playerViewModel.clearError()
-                    }
-                }
-                Scaffold(
-                    modifier = Modifier.fillMaxSize(),
-                    snackbarHost = { SnackbarHost(snackbarHostState) },
-                    bottomBar = {
+				val errorMessageLoad = (messageLoad as? UiState.Error)?.message
+				val errorMessage = errorMessagePlay ?: errorMessageLoad
+				LaunchedEffect(errorMessage) {
+					errorMessage?.let {
+						snackbarHostState.showSnackbar(it)
+						playerViewModel.clearError()
+					}
+				}
+				Scaffold(
+					modifier = Modifier.fillMaxSize(),
+					snackbarHost = { SnackbarHost(snackbarHostState) },
+					bottomBar = {
 						Column {
 							if (nowPlaying != null && currentRoute != Routes.PLAYER) {
 								MiniPlayer(
@@ -174,16 +174,16 @@ class MainActivity : ComponentActivity() {
 								)
 							}
 						}
-                    }
-                ) { innerPadding ->
-                    NavGraph(
-                        navController = navController,
-                        mediaViewModel=mediaViewModel,
-                        playerViewModel=playerViewModel,
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
-            }
-        }
-    }
+					}
+				) { innerPadding ->
+					NavGraph(
+						navController = navController,
+						mediaViewModel=mediaViewModel,
+						playerViewModel=playerViewModel,
+						modifier = Modifier.padding(innerPadding)
+					)
+				}
+			}
+		}
+	}
 }

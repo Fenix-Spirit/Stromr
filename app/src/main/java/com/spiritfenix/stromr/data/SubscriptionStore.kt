@@ -7,7 +7,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-private val Context.dataStore by preferencesDataStore("settings")
+val Context.dataStore by preferencesDataStore("settings")
 
 class SubscriptionStore(context: Context) {
 	private val store = context.applicationContext.dataStore
