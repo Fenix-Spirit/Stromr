@@ -105,5 +105,5 @@ jobs:
           cp app/build/outputs/apk/release/app-release.apk "Stromr-v$VERSION.apk"
           gh release create "v$VERSION" "Stromr-v$VERSION.apk" \
             --title "Strömr v$VERSION" \
-            --notes "$RELEASE_INFO
-            --generate-notes"
+            --notes "$RELEASE_INFO" \
+            --generate-notes
