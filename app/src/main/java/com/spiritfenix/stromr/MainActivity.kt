@@ -87,11 +87,7 @@ class MainActivity : ComponentActivity() {
 						Column {
 							if (nowPlaying != null && currentRoute != Routes.PLAYER) {
 								MiniPlayer(
-									title = nowPlaying.title,
-									subtitle = when (nowPlaying) {
-										is MediaItem.Episode -> nowPlaying.podcastTitle
-										is MediaItem.Song -> nowPlaying.artist
-									},
+									player = playerViewModel,
 									img = nowPlaying.imageUrl,
 									isPlaying = isPlaying,
 									onTogglePlayPause = playerViewModel::togglePlayPause,

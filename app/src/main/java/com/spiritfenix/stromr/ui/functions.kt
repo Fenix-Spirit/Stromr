@@ -22,6 +22,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -670,8 +671,7 @@ fun UpNextSheet(
 }
 @Composable
 fun MiniPlayer(
-	title: String,
-	subtitle: String,
+	player: PlayerViewModel,
 	img: String,
 	isPlaying: Boolean,
 	onTogglePlayPause: () -> Unit,
@@ -682,45 +682,63 @@ fun MiniPlayer(
 		color = MaterialTheme.colorScheme.surfaceVariant,
 		modifier = modifier.fillMaxWidth().clickable(onClick = onClick)
 	) {
-		Row(
-			modifier = Modifier.padding(start = 8.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
-			verticalAlignment = Alignment.CenterVertically
-		) {
-			if (img.isNotEmpty()) {
-				AsyncImage(
-					model = img,
-					contentDescription = stringResource(R.string.image_description),
-					modifier = Modifier.size(48.dp).clip(RoundedCornerShape(4.dp))
-				)
+		Column {
+			var position by remember { mutableLongStateOf(1L) }
+			var duration by remember { mutableLongStateOf(1L) }
+			LaunchedEffect(player.player) {
+				while (true) {
+					position = (player.player?.currentPosition.takeIf { it != C.TIME_UNSET } ?: 1L )/ 1000
+					duration = (player.player?.duration.takeIf { it!= C.TIME_UNSET } ?: 1L)/ 1000
+					delay(500.milliseconds)
+				}
 			}
-			else{
-				Image(
-					modifier = Modifier.size(48.dp).clip(RoundedCornerShape(4.dp)),
-					painter = painterResource(R.drawable.baseline_broken_image_24),
-					contentDescription = stringResource(R.string.broken_image_description),
-				)
-			}
-			Spacer(modifier = Modifier.width(8.dp))
-			Column(modifier = Modifier.weight(1f)) {
-				Text(
-					text = title,
-					style = MaterialTheme.typography.titleSmall,
-					maxLines = 1,
-					overflow = TextOverflow.Ellipsis
-				)
-				Text(
-					text = subtitle,
-					style = MaterialTheme.typography.bodySmall,
-					color = MaterialTheme.colorScheme.onSurfaceVariant,
-					maxLines = 1,
-					overflow = TextOverflow.Ellipsis
-				)
-			}
-			IconButton(onClick = onTogglePlayPause) {
-				Icon(
-					imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-					contentDescription = stringResource(if (isPlaying) R.string.pause else R.string.play)
-				)
+			LinearProgressIndicator(
+				progress = { if (duration != 0L) (position.toFloat()/duration).coerceIn(0f,1f) else 0f },
+				modifier = Modifier.fillMaxWidth().height(2.dp),
+				trackColor = Color.Transparent,
+				gapSize = 0.dp,
+				drawStopIndicator = {}
+			)
+			Row(
+				modifier = Modifier.padding(start = 8.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
+				verticalAlignment = Alignment.CenterVertically
+			) {
+				if (img.isNotEmpty()) {
+					AsyncImage(
+						model = img,
+						contentDescription = stringResource(R.string.image_description),
+						modifier = Modifier.size(48.dp).clip(RoundedCornerShape(4.dp))
+					)
+				}
+				else{
+					Image(
+						modifier = Modifier.size(48.dp).clip(RoundedCornerShape(4.dp)),
+						painter = painterResource(R.drawable.baseline_broken_image_24),
+						contentDescription = stringResource(R.string.broken_image_description),
+					)
+				}
+				Spacer(modifier = Modifier.width(8.dp))
+				Column(modifier = Modifier.weight(1f)) {
+					Text(
+						text = player.player?.mediaMetadata?.title.toString(),
+						style = MaterialTheme.typography.titleSmall,
+						maxLines = 1,
+						overflow = TextOverflow.Ellipsis
+					)
+					Text(
+						text = player.player?.mediaMetadata?.artist.toString(),
+						style = MaterialTheme.typography.bodySmall,
+						color = MaterialTheme.colorScheme.onSurfaceVariant,
+						maxLines = 1,
+						overflow = TextOverflow.Ellipsis
+					)
+				}
+				IconButton(onClick = onTogglePlayPause) {
+					Icon(
+						imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+						contentDescription = stringResource(if (isPlaying) R.string.pause else R.string.play)
+					)
+				}
 			}
 		}
 	}
